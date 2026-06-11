@@ -1,5 +1,6 @@
 import React from 'react';
 import { Trophy, Users, Percent, ShieldAlert, Menu, X, Globe, LogOut } from 'lucide-react';
+import Flag from './UI/Flag';
 
 const Navbar = ({ activePage, setPage, user, onLogout }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -74,8 +75,8 @@ const Navbar = ({ activePage, setPage, user, onLogout }) => {
               <span className="text-xs text-slate-400 font-medium select-none">Fan:</span>
               <span className="text-sm font-bold text-white flex items-center gap-1.5">
                 {user.name} 
-                <span className="text-base" title={user.selectedTeam}>
-                  {getTeamEmoji(user.selectedTeam)}
+                <span className="inline-flex items-center" title={user.selectedTeam}>
+                  <Flag teamName={user.selectedTeam} />
                 </span>
               </span>
             </div>
@@ -136,7 +137,7 @@ const Navbar = ({ activePage, setPage, user, onLogout }) => {
             <div className="flex items-center justify-between py-2 border-b border-white/5 mb-2">
               <span className="text-xs text-slate-400 font-medium">Joined Fan:</span>
               <span className="text-sm font-bold text-white flex items-center gap-1.5">
-                {user.name} <span>{getTeamEmoji(user.selectedTeam)}</span>
+                {user.name} <span className="inline-flex items-center"><Flag teamName={user.selectedTeam} /></span>
               </span>
             </div>
           )}
@@ -207,41 +208,7 @@ const Navbar = ({ activePage, setPage, user, onLogout }) => {
 };
 
 export const getTeamEmoji = (teamName) => {
-  const teams = {
-    'Argentina': '🇦🇷',
-    'Brazil': '🇧🇷',
-    'France': '🇫🇷',
-    'Spain': '🇪🇸',
-    'Germany': '🇩🇪',
-    'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-    'Portugal': '🇵🇹',
-    'Netherlands': '🇳🇱',
-    'Belgium': '🇧🇪',
-    'USA': '🇺🇸',
-    'Mexico': '🇲🇽',
-    'Japan': '🇯🇵',
-    'South Korea': '🇰🇷',
-    'Morocco': '🇲🇦',
-    'Croatia': '🇭🇷',
-    'Senegal': '🇸🇳',
-    'Uruguay': '🇺🇾',
-    'Switzerland': '🇨🇭',
-    'Denmark': '🇩🇰',
-    'Canada': '🇨🇦',
-    'Australia': '🇦🇺',
-    'Saudi Arabia': '🇸🇦',
-    'Ecuador': '🇪🇨',
-    'Qatar': '🇶🇦',
-    'Iran': '🇮🇷',
-    'Wales': '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
-    'Poland': '🇵🇱',
-    'Tunisia': '🇹🇳',
-    'Cameroon': '🇨🇲',
-    'Serbia': '🇷🇸',
-    'Ghana': '🇬🇭',
-    'Costa Rica': '🇨🇷'
-  };
-  return teams[teamName] || '⚽';
+  return <Flag teamName={teamName} />;
 };
 
 export default Navbar;

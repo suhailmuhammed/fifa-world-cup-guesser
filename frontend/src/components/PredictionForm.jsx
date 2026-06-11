@@ -1,36 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, AlertCircle, Sparkles, CheckCircle2, ChevronRight, Loader } from 'lucide-react';
 import Card from './UI/Card';
 import Button from './UI/Button';
+import TeamSelect from './UI/TeamSelect';
+import PlayerSelect from './UI/PlayerSelect';
 import { TEAMS_LIST } from './JoinForm';
-
-const GOLDEN_BOOT_CANDIDATES = [
-  'Kylian Mbappé 🇫🇷',
-  'Erling Haaland 🇳🇴',
-  'Lamine Yamal 🇪🇸',
-  'Harry Kane 🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-  'Lionel Messi 🇦🇷',
-  'Cristiano Ronaldo 🇵🇹',
-  'Jude Bellingham 🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-  'Vinícius Júnior 🇧🇷',
-  'Jamal Musiala 🇩🇪',
-  'Lautaro Martínez 🇦🇷',
-  'Bukayo Saka 🏴󠁧󠁢󠁥󠁮󠁧󠁿'
-];
-
-const GOLDEN_BALL_CANDIDATES = [
-  'Jude Bellingham 🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-  'Vinícius Júnior 🇧🇷',
-  'Kylian Mbappé 🇫🇷',
-  'Lamine Yamal 🇪🇸',
-  'Lionel Messi 🇦🇷',
-  'Florian Wirtz 🇩🇪',
-  'Rodri 🇪🇸',
-  'Phil Foden 🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-  'Antoine Griezmann 🇫🇷',
-  'Kevin De Bruyne 🇧🇪'
-];
+import { GOLDEN_BOOT_CANDIDATES, GOLDEN_BALL_CANDIDATES } from '../data/players';
 
 const PredictionForm = ({ user, setPage, backendUrl, onPredictionSuccess }) => {
   const [champion, setChampion] = useState('');
@@ -38,7 +14,9 @@ const PredictionForm = ({ user, setPage, backendUrl, onPredictionSuccess }) => {
   const [homeGoals, setHomeGoals] = useState(0);
   const [awayGoals, setAwayGoals] = useState(0);
   const [goldenBoot, setGoldenBoot] = useState('');
+  const [customGoldenBoot, setCustomGoldenBoot] = useState('');
   const [goldenBall, setGoldenBall] = useState('');
+  const [customGoldenBall, setCustomGoldenBall] = useState('');
   const [mostGoalsTeam, setMostGoalsTeam] = useState('');
   const [biggestDisappointment, setBiggestDisappointment] = useState('');
 
@@ -80,16 +58,19 @@ const PredictionForm = ({ user, setPage, backendUrl, onPredictionSuccess }) => {
     e.preventDefault();
     setError('');
 
+    const finalGoldenBoot = goldenBoot === 'Other Player' ? customGoldenBoot.trim() : goldenBoot;
+    const finalGoldenBall = goldenBall === 'Other Player' ? customGoldenBall.trim() : goldenBall;
+
     // Field check
     if (
       !champion ||
       !runnerUp ||
-      !goldenBoot ||
-      !goldenBall ||
+      !finalGoldenBoot ||
+      !finalGoldenBall ||
       !mostGoalsTeam ||
       !biggestDisappointment
     ) {
-      setError('Please answer all questions before submitting.');
+      setError('Please answer all questions before submitting. Make sure to enter player names when "Other Player" is selected.');
       return;
     }
 
@@ -111,8 +92,8 @@ const PredictionForm = ({ user, setPage, backendUrl, onPredictionSuccess }) => {
             homeGoals,
             awayGoals
           },
-          goldenBoot,
-          goldenBall,
+          goldenBoot: finalGoldenBoot,
+          goldenBall: finalGoldenBall,
           mostGoalsTeam,
           biggestDisappointment
         })
@@ -212,36 +193,24 @@ const PredictionForm = ({ user, setPage, backendUrl, onPredictionSuccess }) => {
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 🏆 Who will win the FIFA World Cup?
               </label>
-              <select
+              <TeamSelect
+                options={TEAMS_LIST}
                 value={champion}
-                onChange={(e) => setChampion(e.target.value)}
-                className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fifa-gold cursor-pointer"
-              >
-                <option value="">Select Champion...</option>
-                {TEAMS_LIST.map((t) => (
-                  <option key={t.name} value={t.name} className="bg-slate-950">
-                    {t.flag} &nbsp; {t.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setChampion}
+                placeholder="Select Champion..."
+              />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 🥈 Which team will finish as the runner-up?
               </label>
-              <select
+              <TeamSelect
+                options={TEAMS_LIST}
                 value={runnerUp}
-                onChange={(e) => setRunnerUp(e.target.value)}
-                className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fifa-gold cursor-pointer"
-              >
-                <option value="">Select Runner-up...</option>
-                {TEAMS_LIST.map((t) => (
-                  <option key={t.name} value={t.name} className="bg-slate-950">
-                    {t.flag} &nbsp; {t.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setRunnerUp}
+                placeholder="Select Runner-up..."
+              />
             </div>
           </div>
         </Card>
@@ -315,36 +284,70 @@ const PredictionForm = ({ user, setPage, backendUrl, onPredictionSuccess }) => {
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 👟 Who will win the Golden Boot (Top Scorer)?
               </label>
-              <select
+              <PlayerSelect
+                options={GOLDEN_BOOT_CANDIDATES}
                 value={goldenBoot}
-                onChange={(e) => setGoldenBoot(e.target.value)}
-                className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fifa-gold cursor-pointer"
-              >
-                <option value="">Select Golden Boot Candidate...</option>
-                {GOLDEN_BOOT_CANDIDATES.map((p) => (
-                  <option key={p} value={p} className="bg-slate-950">
-                    {p}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => {
+                  setGoldenBoot(val);
+                  if (val !== 'Other Player') {
+                    setCustomGoldenBoot('');
+                  }
+                }}
+                placeholder="Select Golden Boot Candidate..."
+              />
+              <AnimatePresence>
+                {goldenBoot === 'Other Player' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Enter Player Name"
+                      value={customGoldenBoot}
+                      onChange={(e) => setCustomGoldenBoot(e.target.value)}
+                      className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-fifa-gold transition-colors duration-200"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 ⭐ Who will win the Golden Ball (Best Player)?
               </label>
-              <select
+              <PlayerSelect
+                options={GOLDEN_BALL_CANDIDATES}
                 value={goldenBall}
-                onChange={(e) => setGoldenBall(e.target.value)}
-                className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fifa-gold cursor-pointer"
-              >
-                <option value="">Select Golden Ball Candidate...</option>
-                {GOLDEN_BALL_CANDIDATES.map((p) => (
-                  <option key={p} value={p} className="bg-slate-950">
-                    {p}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => {
+                  setGoldenBall(val);
+                  if (val !== 'Other Player') {
+                    setCustomGoldenBall('');
+                  }
+                }}
+                placeholder="Select Golden Ball Candidate..."
+              />
+              <AnimatePresence>
+                {goldenBall === 'Other Player' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Enter Player Name"
+                      value={customGoldenBall}
+                      onChange={(e) => setCustomGoldenBall(e.target.value)}
+                      className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-fifa-gold transition-colors duration-200"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </Card>
@@ -360,36 +363,24 @@ const PredictionForm = ({ user, setPage, backendUrl, onPredictionSuccess }) => {
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 ⚽ Which team will score the most goals?
               </label>
-              <select
+              <TeamSelect
+                options={TEAMS_LIST}
                 value={mostGoalsTeam}
-                onChange={(e) => setMostGoalsTeam(e.target.value)}
-                className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fifa-gold cursor-pointer"
-              >
-                <option value="">Select Team...</option>
-                {TEAMS_LIST.map((t) => (
-                  <option key={t.name} value={t.name} className="bg-slate-950">
-                    {t.flag} &nbsp; {t.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setMostGoalsTeam}
+                placeholder="Select Team..."
+              />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 🤯 Which team will be the biggest disappointment?
               </label>
-              <select
+              <TeamSelect
+                options={TEAMS_LIST}
                 value={biggestDisappointment}
-                onChange={(e) => setBiggestDisappointment(e.target.value)}
-                className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-fifa-gold cursor-pointer"
-              >
-                <option value="">Select Team...</option>
-                {TEAMS_LIST.map((t) => (
-                  <option key={t.name} value={t.name} className="bg-slate-950">
-                    {t.flag} &nbsp; {t.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setBiggestDisappointment}
+                placeholder="Select Team..."
+              />
             </div>
           </div>
         </Card>

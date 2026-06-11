@@ -165,6 +165,36 @@ async function getPredictionByUserId(userId) {
   }
 }
 
+async function getPredictorsByOption(field, value) {
+  if (!isFallback) {
+    const escapedValue = value.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const predictions = await Prediction.find({
+      [field]: { $regex: new RegExp('^' + escapedValue + '$', 'i') }
+    }).populate('userId');
+    return predictions
+      .filter(p => p.userId)
+      .map(p => ({
+        _id: p.userId._id,
+        name: p.userId.name,
+        selectedTeam: p.userId.selectedTeam,
+        createdAt: p.createdAt
+      }));
+  } else {
+    const predictions = localDb.predictions.filter(
+      p => p[field] && p[field].toLowerCase() === value.toLowerCase()
+    );
+    return predictions.map(p => {
+      const user = localDb.users.find(u => u._id === p.userId);
+      return {
+        _id: p.userId,
+        name: user ? user.name : 'Unknown User',
+        selectedTeam: user ? user.selectedTeam : 'Unknown Team',
+        createdAt: p.createdAt
+      };
+    });
+  }
+}
+
 async function deleteUser(id) {
   if (!isFallback) {
     await User.findByIdAndDelete(id);
@@ -187,6 +217,8 @@ module.exports = {
   createPrediction,
   getPredictions,
   getPredictionByUserId,
+  getPredictorsByOption,
   deleteUser,
   isFallback: () => isFallback
 };
+

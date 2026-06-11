@@ -6,7 +6,7 @@ import {
   Globe, Calendar, Eye, EyeOff, CheckCircle2, ChevronDown, ChevronUp, X 
 } from 'lucide-react';
 import Card from './UI/Card';
-import { getTeamEmoji } from './Navbar';
+import Flag from './UI/Flag';
 import { TEAMS_LIST } from './JoinForm';
 
 const AdminDashboard = ({ backendUrl }) => {
@@ -461,7 +461,7 @@ const AdminDashboard = ({ backendUrl }) => {
                     <span className="block text-lg font-black text-white mt-2.5 flex items-center gap-2">
                       {stats.topChampion ? (
                         <>
-                          <span>{getTeamEmoji(stats.topChampion.name)}</span>
+                          <span className="inline-flex items-center"><Flag teamName={stats.topChampion.name} /></span>
                           <span className="truncate">{stats.topChampion.name}</span>
                           <span className="text-xs font-semibold text-fifa-gold">({stats.topChampion.percentage}%)</span>
                         </>
@@ -493,7 +493,7 @@ const AdminDashboard = ({ backendUrl }) => {
                       <div key={idx} className="py-3 flex flex-col gap-2">
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                            <span className="text-base select-none">{getTeamEmoji(item.team)}</span>
+                            <span className="inline-flex items-center select-none"><Flag teamName={item.team} /></span>
                             <span>{item.team}</span>
                           </span>
                           <span className="text-xs font-bold text-fifa-gold bg-fifa-gold/10 border border-fifa-gold/15 px-2.5 py-1 rounded-lg">
@@ -564,7 +564,12 @@ const AdminDashboard = ({ backendUrl }) => {
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-bold text-white flex items-center gap-2">
                         <Trophy className="h-4.5 w-4.5 text-fifa-gold" />
-                        {stats.topChampion ? `${getTeamEmoji(stats.topChampion.name)} ${stats.topChampion.name}` : 'No votes yet'}
+                        {stats.topChampion ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <Flag teamName={stats.topChampion.name} />
+                            <span>{stats.topChampion.name}</span>
+                          </span>
+                        ) : 'No votes yet'}
                       </span>
                       {stats.topChampion && (
                         <span className="text-xs text-fifa-gold font-bold">{stats.topChampion.percentage}% of votes</span>
@@ -616,7 +621,7 @@ const AdminDashboard = ({ backendUrl }) => {
                       className={`p-4 flex justify-between items-center ${hasFans ? 'cursor-pointer select-none hover:bg-white/5' : ''}`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl select-none">{country.flag}</span>
+                        <span className="inline-flex items-center select-none"><Flag teamName={country.teamName} /></span>
                         <div>
                           <span className="font-extrabold text-sm text-slate-100 block">{country.teamName}</span>
                           <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Qualified Nation</span>
@@ -724,7 +729,7 @@ const AdminDashboard = ({ backendUrl }) => {
                         {/* Allegiance country */}
                         <td className="py-4.5 px-6">
                           <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-                            <span className="text-base select-none">{getTeamEmoji(user.selectedTeam)}</span>
+                            <span className="inline-flex items-center select-none"><Flag teamName={user.selectedTeam} /></span>
                             <span>{user.selectedTeam}</span>
                           </span>
                         </td>
@@ -745,7 +750,7 @@ const AdminDashboard = ({ backendUrl }) => {
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Submitted
                               </span>
                               <span className="text-[10px] text-slate-400 font-semibold">
-                                Champion Pick: <span className="font-extrabold text-slate-200">{getTeamEmoji(user.prediction.champion)} {user.prediction.champion}</span>
+                                Champion Pick: <span className="font-extrabold text-slate-200 inline-flex items-center gap-1.5"><Flag teamName={user.prediction.champion} /> {user.prediction.champion}</span>
                               </span>
                             </div>
                           ) : (
@@ -810,7 +815,7 @@ const AdminDashboard = ({ backendUrl }) => {
               <div className="flex justify-between items-center text-slate-400">
                 <span>Nation Allegiance:</span>
                 <span className="text-slate-200 flex items-center gap-1">
-                  <span>{getTeamEmoji(deleteConfirmUser.selectedTeam)}</span>
+                  <span className="inline-flex items-center"><Flag teamName={deleteConfirmUser.selectedTeam} /></span>
                   <span>{deleteConfirmUser.selectedTeam}</span>
                 </span>
               </div>

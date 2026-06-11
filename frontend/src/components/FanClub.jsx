@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Search, ArrowUpDown, ShieldCheck, Trophy, ArrowRight, Loader } from 'lucide-react';
 import Card from './UI/Card';
 import Button from './UI/Button';
-import { getTeamEmoji } from './Navbar';
+import Flag from './UI/Flag';
 
 const FanClub = ({ user, setPage, backendUrl }) => {
   const [clubData, setClubData] = useState(null);
@@ -67,10 +67,9 @@ const FanClub = ({ user, setPage, backendUrl }) => {
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-fifa-gold/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="flex flex-col md:flex-row items-center gap-5 text-center md:text-left">
-          <span className="text-6xl md:text-7xl filter drop-shadow-lg" role="img" aria-label="Team Flag">
-            {getTeamEmoji(user.selectedTeam)}
-          </span>
+          <Flag teamName={user.selectedTeam} className="w-20 h-14 md:w-24 md:h-16 object-cover rounded-lg shadow-lg shrink-0" />
           <div>
+
             <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
               {user.selectedTeam} Fan Club
             </h1>

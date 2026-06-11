@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, Users, Search, ChevronDown, ChevronUp, Loader, AlertTriangle, RefreshCw } from 'lucide-react';
 import Card from './UI/Card';
-import { getTeamEmoji } from './Navbar';
+import Flag from './UI/Flag';
 import { TEAMS_LIST } from './JoinForm';
 
 const NationsOverview = ({ backendUrl }) => {
@@ -205,8 +205,8 @@ const NationsOverview = ({ backendUrl }) => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl select-none" role="img" aria-label="Flag">
-                      {nation.flag}
+                    <span className="inline-flex items-center select-none">
+                      <Flag teamName={nation.name} className="w-8 h-5.5 object-cover rounded-md shadow-sm mr-1" />
                     </span>
                     <div>
                       <span className="font-extrabold text-sm text-slate-100 block">{nation.name}</span>

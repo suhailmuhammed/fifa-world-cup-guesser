@@ -115,6 +115,37 @@ router.get('/predictions/user/:userId', async (req, res) => {
   }
 });
 
+// Get predictors for a specific option/field
+router.get('/predictions/predictors', async (req, res) => {
+  try {
+    const { field, value } = req.query;
+    
+    if (!field || !value) {
+      return res.status(400).json({ error: 'field and value query parameters are required' });
+    }
+
+    const allowedFields = [
+      'champion',
+      'runnerUp',
+      'goldenBoot',
+      'goldenBall',
+      'mostGoalsTeam',
+      'biggestDisappointment'
+    ];
+
+    if (!allowedFields.includes(field)) {
+      return res.status(400).json({ error: `Invalid field. Must be one of: ${allowedFields.join(', ')}` });
+    }
+
+    const predictors = await db.getPredictorsByOption(field, value);
+    res.json(predictors);
+  } catch (err) {
+    console.error('Error getting predictors:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 
 // Helper for percentages
 function calculatePercentages(predictions, field) {

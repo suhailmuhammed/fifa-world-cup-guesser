@@ -2,41 +2,42 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Card from './UI/Card';
 import Button from './UI/Button';
+import TeamSelect from './UI/TeamSelect';
 import { Users, AlertCircle } from 'lucide-react';
 
 export const TEAMS_LIST = [
-  { name: 'Argentina', flag: '🇦🇷' },
-  { name: 'Brazil', flag: '🇧🇷' },
-  { name: 'France', flag: '🇫🇷' },
-  { name: 'Spain', flag: '🇪🇸' },
-  { name: 'Germany', flag: '🇩🇪' },
-  { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
-  { name: 'Portugal', flag: '🇵🇹' },
-  { name: 'Netherlands', flag: '🇳🇱' },
-  { name: 'Belgium', flag: '🇧🇪' },
-  { name: 'USA', flag: '🇺🇸' },
-  { name: 'Mexico', flag: '🇲🇽' },
-  { name: 'Japan', flag: '🇯🇵' },
-  { name: 'South Korea', flag: '🇰🇷' },
-  { name: 'Morocco', flag: '🇲🇦' },
-  { name: 'Croatia', flag: '🇭🇷' },
-  { name: 'Senegal', flag: '🇸🇳' },
-  { name: 'Uruguay', flag: '🇺🇾' },
-  { name: 'Switzerland', flag: '🇨🇭' },
-  { name: 'Denmark', flag: '🇩🇰' },
-  { name: 'Canada', flag: '🇨🇦' },
-  { name: 'Australia', flag: '🇦🇺' },
-  { name: 'Saudi Arabia', flag: '🇸🇦' },
-  { name: 'Ecuador', flag: '🇪🇨' },
-  { name: 'Qatar', flag: '🇶🇦' },
-  { name: 'Iran', flag: '🇮🇷' },
-  { name: 'Wales', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿' },
-  { name: 'Poland', flag: '🇵🇱' },
-  { name: 'Tunisia', flag: '🇹🇳' },
-  { name: 'Cameroon', flag: '🇨🇲' },
-  { name: 'Serbia', flag: '🇷🇸' },
-  { name: 'Ghana', flag: '🇬🇭' },
-  { name: 'Costa Rica', flag: '🇨🇷' }
+  { name: 'Argentina', code: 'AR', flag: 'https://flagcdn.com/ar.svg' },
+  { name: 'Australia', code: 'AU', flag: 'https://flagcdn.com/au.svg' },
+  { name: 'Belgium', code: 'BE', flag: 'https://flagcdn.com/be.svg' },
+  { name: 'Brazil', code: 'BR', flag: 'https://flagcdn.com/br.svg' },
+  { name: 'Cameroon', code: 'CM', flag: 'https://flagcdn.com/cm.svg' },
+  { name: 'Canada', code: 'CA', flag: 'https://flagcdn.com/ca.svg' },
+  { name: 'Costa Rica', code: 'CR', flag: 'https://flagcdn.com/cr.svg' },
+  { name: 'Croatia', code: 'HR', flag: 'https://flagcdn.com/hr.svg' },
+  { name: 'Denmark', code: 'DK', flag: 'https://flagcdn.com/dk.svg' },
+  { name: 'Ecuador', code: 'EC', flag: 'https://flagcdn.com/ec.svg' },
+  { name: 'England', code: 'GB-ENG', flag: 'https://flagcdn.com/gb-eng.svg' },
+  { name: 'France', code: 'FR', flag: 'https://flagcdn.com/fr.svg' },
+  { name: 'Germany', code: 'DE', flag: 'https://flagcdn.com/de.svg' },
+  { name: 'Ghana', code: 'GH', flag: 'https://flagcdn.com/gh.svg' },
+  { name: 'Iran', code: 'IR', flag: 'https://flagcdn.com/ir.svg' },
+  { name: 'Japan', code: 'JP', flag: 'https://flagcdn.com/jp.svg' },
+  { name: 'Mexico', code: 'MX', flag: 'https://flagcdn.com/mx.svg' },
+  { name: 'Morocco', code: 'MA', flag: 'https://flagcdn.com/ma.svg' },
+  { name: 'Netherlands', code: 'NL', flag: 'https://flagcdn.com/nl.svg' },
+  { name: 'Poland', code: 'PL', flag: 'https://flagcdn.com/pl.svg' },
+  { name: 'Portugal', code: 'PT', flag: 'https://flagcdn.com/pt.svg' },
+  { name: 'Qatar', code: 'QA', flag: 'https://flagcdn.com/qa.svg' },
+  { name: 'Saudi Arabia', code: 'SA', flag: 'https://flagcdn.com/sa.svg' },
+  { name: 'Senegal', code: 'SN', flag: 'https://flagcdn.com/sn.svg' },
+  { name: 'Serbia', code: 'RS', flag: 'https://flagcdn.com/rs.svg' },
+  { name: 'South Korea', code: 'KR', flag: 'https://flagcdn.com/kr.svg' },
+  { name: 'Spain', code: 'ES', flag: 'https://flagcdn.com/es.svg' },
+  { name: 'Switzerland', code: 'CH', flag: 'https://flagcdn.com/ch.svg' },
+  { name: 'Tunisia', code: 'TN', flag: 'https://flagcdn.com/tn.svg' },
+  { name: 'USA', code: 'US', flag: 'https://flagcdn.com/us.svg' },
+  { name: 'Uruguay', code: 'UY', flag: 'https://flagcdn.com/uy.svg' },
+  { name: 'Wales', code: 'GB-WLS', flag: 'https://flagcdn.com/gb-wls.svg' }
 ].sort((a, b) => a.name.localeCompare(b.name));
 
 const JoinForm = ({ onJoinSuccess, backendUrl }) => {
@@ -89,7 +90,7 @@ const JoinForm = ({ onJoinSuccess, backendUrl }) => {
       transition={{ duration: 0.5 }}
       className="max-w-md w-full mx-auto px-4"
     >
-      <Card className="p-8 shadow-2xl relative overflow-hidden">
+      <Card className="p-8 shadow-2xl relative">
         {/* Glow Accent */}
         <div className="absolute -top-20 -left-20 w-40 h-40 bg-fifa-blue/25 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-fifa-gold/15 rounded-full blur-3xl pointer-events-none" />
@@ -124,29 +125,16 @@ const JoinForm = ({ onJoinSuccess, backendUrl }) => {
 
           {/* Favorite Team Field */}
           <div>
-            <label htmlFor="team" className="block text-sm font-semibold text-slate-300 mb-1.5">
+            <label className="block text-sm font-semibold text-slate-300 mb-1.5">
               Favorite World Cup Team
             </label>
-            <div className="relative">
-              <select
-                id="team"
-                value={team}
-                onChange={(e) => setTeam(e.target.value)}
-                className="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white appearance-none focus:outline-none focus:border-fifa-gold transition-colors duration-200 cursor-pointer"
-              >
-                <option value="" className="bg-slate-950 text-slate-500">Select Team...</option>
-                {TEAMS_LIST.map((t) => (
-                  <option key={t.name} value={t.name} className="bg-slate-950 text-white">
-                    {t.flag} &nbsp; {t.name}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                </svg>
-              </div>
-            </div>
+            <TeamSelect
+              options={TEAMS_LIST}
+              value={team}
+              onChange={setTeam}
+              placeholder="Select Team..."
+              id="team-select"
+            />
           </div>
 
           {/* Validation Alert */}
