@@ -1,0 +1,48 @@
+{
+  "users": [
+    {
+      "_id": "u_xibwtbdlr",
+      "name": "Sijo",
+      "selectedTeam": "Argentina",
+      "createdAt": "2026-06-11T06:30:40.030Z"
+    },
+    {
+      "_id": "u_lpocexkgc",
+      "name": "Suhail",
+      "selectedTeam": "Portugal",
+      "createdAt": "2026-06-11T06:33:43.081Z"
+    }
+  ],
+  "predictions": [
+    {
+      "_id": "p_goew5nxp1",
+      "userId": "u_xibwtbdlr",
+      "champion": "Argentina",
+      "runnerUp": "Brazil",
+      "finalScore": {
+        "homeGoals": 2,
+        "awayGoals": 2
+      },
+      "goldenBoot": "Lionel Messi 🇦🇷",
+      "goldenBall": "Lionel Messi 🇦🇷",
+      "mostGoalsTeam": "Argentina",
+      "biggestDisappointment": "Argentina",
+      "createdAt": "2026-06-11T06:33:15.602Z"
+    },
+    {
+      "_id": "p_rxte5zwoy",
+      "userId": "u_lpocexkgc",
+      "champion": "Portugal",
+      "runnerUp": "Switzerland",
+      "finalScore": {
+        "homeGoals": 1,
+        "awayGoals": 3
+      },
+      "goldenBoot": "Jamal Musiala 🇩🇪",
+      "goldenBall": "Kylian Mbappé 🇫🇷",
+      "mostGoalsTeam": "Japan",
+      "biggestDisappointment": "Denmark",
+      "createdAt": "2026-06-11T06:34:02.758Z"
+    }
+  ]
+}
