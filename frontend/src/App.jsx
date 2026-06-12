@@ -7,6 +7,7 @@ import PredictionForm from './components/PredictionForm';
 import CommunityStats from './components/CommunityStats';
 import AdminDashboard from './components/AdminDashboard';
 import NationsOverview from './components/NationsOverview';
+import Games from './components/Games';
 import Button from './components/UI/Button';
 import { Trophy, Percent, ShieldAlert } from 'lucide-react';
 
@@ -87,12 +88,14 @@ const App = () => {
               >
                 <InstagramIcon className="h-3.5 w-3.5 text-pink-500" /> Follow us on Instagram
               </a>
-              <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-tight">
-                FIFA World Cup <br />
-                <span className="text-gradient-gold">Fan Guesser</span>
+              <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-tight">
+                <span className="text-gradient-gold">Goal Hub</span>
               </h1>
-              <p className="text-slate-400 text-sm sm:text-lg max-w-2xl mx-auto font-semibold">
-                Join your nation's supporters and predict the future of the World Cup. Compare predictions with the community and see who rules the pitch.
+              <p className="text-fifa-gold text-lg sm:text-2xl max-w-2xl mx-auto font-black uppercase tracking-widest mt-2">
+                Predict. Play. Celebrate
+              </p>
+              <p className="text-slate-400 text-xs sm:text-sm max-w-md mx-auto font-semibold mt-1.5">
+                Join your FIFA 2026 nation's fan club, lock in predictions, compete in mini-games, and climb the leaderboards.
               </p>
             </div>
 
@@ -132,6 +135,8 @@ const App = () => {
         return <NationsOverview key="nations" backendUrl={BACKEND_URL} />;
       case 'admin':
         return <AdminDashboard key="admin" backendUrl={BACKEND_URL} />;
+      case 'games':
+        return <Games key="games" />;
       default:
         setPage('landing');
         return null;
@@ -166,6 +171,9 @@ const App = () => {
           </button>
           <button onClick={() => setPage('stats')} className="hover:text-slate-300 transition-colors">
             Stats
+          </button>
+          <button onClick={() => setPage('games')} className="hover:text-slate-300 transition-colors">
+            Games
           </button>
           <button onClick={() => setPage('admin')} className="hover:text-slate-300 transition-colors flex items-center gap-1">
             <ShieldAlert className="h-3 w-3 text-red-500/80" /> Admin Console

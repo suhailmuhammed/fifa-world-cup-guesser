@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Users, Percent, ShieldAlert, Menu, X, Globe, LogOut } from 'lucide-react';
+import { Trophy, Users, Percent, ShieldAlert, Menu, X, Globe, LogOut, Gamepad2 } from 'lucide-react';
 import Flag from './UI/Flag';
 
 const Navbar = ({ activePage, setPage, user, onLogout }) => {
@@ -19,7 +19,7 @@ const Navbar = ({ activePage, setPage, user, onLogout }) => {
       >
         <Trophy className="h-6 w-6 text-fifa-gold transition-transform duration-300 group-hover:rotate-12" />
         <span className="font-black text-lg md:text-xl tracking-wider text-gradient-gold">
-          FIFA GUESSER
+          GOAL HUB
         </span>
       </div>
 
@@ -64,6 +64,15 @@ const Navbar = ({ activePage, setPage, user, onLogout }) => {
         >
           <Percent className="h-4 w-4" />
           Community Stats
+        </button>
+        <button
+          onClick={() => handleNavClick('games')}
+          className={`flex items-center gap-1.5 text-sm font-semibold transition-colors duration-200 ${
+            activePage === 'games' ? 'text-fifa-gold' : 'text-slate-300 hover:text-white'
+          }`}
+        >
+          <Gamepad2 className="h-4 w-4" />
+          Games
         </button>
       </div>
 
@@ -180,6 +189,15 @@ const Navbar = ({ activePage, setPage, user, onLogout }) => {
           >
             <Percent className="h-5 w-5" />
             Community Stats
+          </button>
+          <button
+            onClick={() => handleNavClick('games')}
+            className={`flex items-center gap-3 py-2 text-left font-semibold ${
+              activePage === 'games' ? 'text-fifa-gold' : 'text-slate-300'
+            }`}
+          >
+            <Gamepad2 className="h-5 w-5" />
+            Games
           </button>
           {!user && (
             <button

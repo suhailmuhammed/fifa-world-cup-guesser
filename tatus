@@ -1,0 +1,21 @@
+[33mcommit e0381a336fe03d9d93fcd8fd661e54f95511d47e[m
+Author: suhailmuhammed <ml@studiolumen.ae>
+Date:   Thu Jun 11 16:37:50 2026 +0530
+
+    Enhanced player prediction system
+
+ backend/db.js                               |  32 [32m+++[m
+ backend/db_fallback.json                    |  43 [32m+[m[31m---[m
+ backend/routes/api.js                       |  31 [32m+++[m
+ frontend/src/components/AdminDashboard.jsx  |  21 [32m+[m[31m-[m
+ frontend/src/components/CommunityStats.jsx  | 222 [32m++++++++++++++[m[31m--[m
+ frontend/src/components/FanClub.jsx         |   7 [32m+[m[31m-[m
+ frontend/src/components/JoinForm.jsx        |  96 [32m+++[m[31m----[m
+ frontend/src/components/NationsOverview.jsx |   6 [32m+[m[31m-[m
+ frontend/src/components/Navbar.jsx          |  43 [32m+[m[31m---[m
+ frontend/src/components/PredictionForm.jsx  | 189 [32m+++++++[m[31m-------[m
+ frontend/src/components/UI/Flag.jsx         |  79 [32m++++++[m
+ frontend/src/components/UI/PlayerSelect.jsx | 383 [32m++++++++++++++++++++++++++++[m
+ frontend/src/components/UI/TeamSelect.jsx   | 316 [32m+++++++++++++++++++++++[m
+ frontend/src/data/players.js                |  75 [32m++++++[m
+ 14 files changed, 1287 insertions(+), 256 deletions(-)

@@ -16,7 +16,7 @@ app.use('/api', apiRoutes);
 
 // Welcome route
 app.get('/', (req, res) => {
-  res.send('FIFA World Cup Fan Guesser API is running...');
+  res.send('Goal Hub API is running...');
 });
 
 // Start server

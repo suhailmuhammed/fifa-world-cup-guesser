@@ -340,7 +340,7 @@ const AdminDashboard = ({ backendUrl }) => {
             <ShieldAlert className="h-3.5 w-3.5" /> Administrator Mode
           </span>
           <h1 className="text-3xl font-black text-white tracking-tight mt-3">
-            FIFA Fan Guesser Console
+            Goal Hub Admin Console
           </h1>
           <p className="text-slate-400 text-xs mt-1 font-semibold">
             Realtime database aggregates, full country fan rosters, and user management.

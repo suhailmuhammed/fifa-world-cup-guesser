@@ -1,27 +1,4 @@
 {
-  "users": [
-    {
-      "_id": "u_z18r03mqe",
-      "name": "Suhail",
-      "selectedTeam": "Portugal",
-      "createdAt": "2026-06-11T11:05:06.181Z"
-    }
-  ],
-  "predictions": [
-    {
-      "_id": "p_ya618fyff",
-      "userId": "u_z18r03mqe",
-      "champion": "Argentina",
-      "runnerUp": "France",
-      "finalScore": {
-        "homeGoals": 1,
-        "awayGoals": 2
-      },
-      "goldenBoot": "Lionel Messi",
-      "goldenBall": "Ronaldo",
-      "mostGoalsTeam": "Brazil",
-      "biggestDisappointment": "Spain",
-      "createdAt": "2026-06-11T11:06:35.111Z"
-    }
-  ]
+  "users": [],
+  "predictions": []
 }
