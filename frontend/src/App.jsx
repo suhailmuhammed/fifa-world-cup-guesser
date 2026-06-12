@@ -13,24 +13,9 @@ import { Trophy, Percent, ShieldAlert } from 'lucide-react';
 
 import FootballIcon from './components/UI/FootballIcon';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://name-fifa-world-cup-guesser-api.onrender.com';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
-const InstagramIcon = ({ className = "h-4 w-4" }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-  </svg>
-);
+
 
 const App = () => {
   const [page, setPage] = useState('landing');
@@ -82,14 +67,6 @@ const App = () => {
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[500px] h-[350px] sm:w-[500px] bg-fifa-blue/15 rounded-full blur-3xl pointer-events-none" />
             
             <div className="space-y-4">
-              <a 
-                href="https://www.instagram.com/ada_bommale__"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs uppercase font-extrabold tracking-widest text-slate-300 hover:text-white px-4 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 inline-flex items-center gap-1.5 mx-auto transition-all duration-200"
-              >
-                <InstagramIcon className="h-3.5 w-3.5 text-pink-500" /> Follow us on Instagram
-              </a>
               <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-tight flex items-center justify-center gap-3 md:gap-5">
                 <FootballIcon className="h-12 w-12 sm:h-20 sm:w-20 md:h-24 md:w-24 shrink-0 animate-pulse" />
                 <span className="text-gradient-gold">Trionda</span>
@@ -162,14 +139,6 @@ const App = () => {
           <span>© 2026 Trionda | Developed by <a href="https://github.com/suhailmuhammed" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors font-bold text-slate-400">Suhail Muhammed</a></span>
         </div>
         <div className="flex items-center gap-6">
-          <a 
-            href="https://www.instagram.com/ada_bommale__" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="hover:text-pink-500 transition-colors flex items-center gap-1"
-          >
-            <InstagramIcon className="h-3.5 w-3.5" /> Instagram
-          </a>
           <button onClick={() => setPage('nations')} className="hover:text-slate-300 transition-colors">
             Nations
           </button>
