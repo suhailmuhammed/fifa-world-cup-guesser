@@ -286,7 +286,7 @@ const PlayerSelect = ({
                           <Flag
                             flagUrl={option.countryFlag}
                             alt={option.country}
-                            className="w-4.5 h-3 object-cover rounded-sm shadow-sm shrink-0"
+                            className="w-4 h-3 object-cover rounded-sm shadow-sm shrink-0"
                           />
                         ) : (
                           option.id === 'other' ? null : <span className="text-xxs shrink-0">⚽</span>

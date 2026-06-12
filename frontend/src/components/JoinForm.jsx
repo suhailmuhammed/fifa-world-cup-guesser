@@ -4,41 +4,7 @@ import Card from './UI/Card';
 import Button from './UI/Button';
 import TeamSelect from './UI/TeamSelect';
 import { Users, AlertCircle } from 'lucide-react';
-
-export const TEAMS_LIST = [
-  { name: 'Argentina', code: 'AR', flag: 'https://flagcdn.com/ar.svg' },
-  { name: 'Australia', code: 'AU', flag: 'https://flagcdn.com/au.svg' },
-  { name: 'Belgium', code: 'BE', flag: 'https://flagcdn.com/be.svg' },
-  { name: 'Brazil', code: 'BR', flag: 'https://flagcdn.com/br.svg' },
-  { name: 'Cameroon', code: 'CM', flag: 'https://flagcdn.com/cm.svg' },
-  { name: 'Canada', code: 'CA', flag: 'https://flagcdn.com/ca.svg' },
-  { name: 'Costa Rica', code: 'CR', flag: 'https://flagcdn.com/cr.svg' },
-  { name: 'Croatia', code: 'HR', flag: 'https://flagcdn.com/hr.svg' },
-  { name: 'Denmark', code: 'DK', flag: 'https://flagcdn.com/dk.svg' },
-  { name: 'Ecuador', code: 'EC', flag: 'https://flagcdn.com/ec.svg' },
-  { name: 'England', code: 'GB-ENG', flag: 'https://flagcdn.com/gb-eng.svg' },
-  { name: 'France', code: 'FR', flag: 'https://flagcdn.com/fr.svg' },
-  { name: 'Germany', code: 'DE', flag: 'https://flagcdn.com/de.svg' },
-  { name: 'Ghana', code: 'GH', flag: 'https://flagcdn.com/gh.svg' },
-  { name: 'Iran', code: 'IR', flag: 'https://flagcdn.com/ir.svg' },
-  { name: 'Japan', code: 'JP', flag: 'https://flagcdn.com/jp.svg' },
-  { name: 'Mexico', code: 'MX', flag: 'https://flagcdn.com/mx.svg' },
-  { name: 'Morocco', code: 'MA', flag: 'https://flagcdn.com/ma.svg' },
-  { name: 'Netherlands', code: 'NL', flag: 'https://flagcdn.com/nl.svg' },
-  { name: 'Poland', code: 'PL', flag: 'https://flagcdn.com/pl.svg' },
-  { name: 'Portugal', code: 'PT', flag: 'https://flagcdn.com/pt.svg' },
-  { name: 'Qatar', code: 'QA', flag: 'https://flagcdn.com/qa.svg' },
-  { name: 'Saudi Arabia', code: 'SA', flag: 'https://flagcdn.com/sa.svg' },
-  { name: 'Senegal', code: 'SN', flag: 'https://flagcdn.com/sn.svg' },
-  { name: 'Serbia', code: 'RS', flag: 'https://flagcdn.com/rs.svg' },
-  { name: 'South Korea', code: 'KR', flag: 'https://flagcdn.com/kr.svg' },
-  { name: 'Spain', code: 'ES', flag: 'https://flagcdn.com/es.svg' },
-  { name: 'Switzerland', code: 'CH', flag: 'https://flagcdn.com/ch.svg' },
-  { name: 'Tunisia', code: 'TN', flag: 'https://flagcdn.com/tn.svg' },
-  { name: 'USA', code: 'US', flag: 'https://flagcdn.com/us.svg' },
-  { name: 'Uruguay', code: 'UY', flag: 'https://flagcdn.com/uy.svg' },
-  { name: 'Wales', code: 'GB-WLS', flag: 'https://flagcdn.com/gb-wls.svg' }
-].sort((a, b) => a.name.localeCompare(b.name));
+import { TEAMS_LIST } from '../data/teams';
 
 const JoinForm = ({ onJoinSuccess, backendUrl }) => {
   const [name, setName] = useState('');

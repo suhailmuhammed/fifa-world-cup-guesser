@@ -5,7 +5,7 @@ import Card from './UI/Card';
 import Button from './UI/Button';
 import TeamSelect from './UI/TeamSelect';
 import PlayerSelect from './UI/PlayerSelect';
-import { TEAMS_LIST } from './JoinForm';
+import { TEAMS_LIST } from '../data/teams';
 import { GOLDEN_BOOT_CANDIDATES, GOLDEN_BALL_CANDIDATES } from '../data/players';
 
 const PredictionForm = ({ user, setPage, backendUrl, onPredictionSuccess }) => {

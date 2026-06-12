@@ -182,11 +182,11 @@ const TeamSelect = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -4, scale: 0.98 }}
           transition={{ duration: 0.15 }}
-          className="rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-slate-900/95 backdrop-blur-xl"
+          className="rounded-xl overflow-hidden border border-fifa-gold/30 shadow-2xl bg-slate-900/95 backdrop-blur-xl"
           style={{ ...dropdownStyle, maxHeight: '320px' }}
         >
           {/* Search Input */}
-          <div className="p-2.5 border-b border-white/5">
+          <div className="p-2.5 border-b border-white/5 bg-slate-950/20">
             <div className="relative">
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500"
@@ -202,8 +202,8 @@ const TeamSelect = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Search..."
-                className="w-full bg-slate-800/60 border border-white/5 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-fifa-gold/40 transition-colors"
+                placeholder="Search country name..."
+                className="w-full bg-slate-800/60 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-fifa-gold transition-colors duration-200"
               />
             </div>
           </div>
@@ -211,7 +211,7 @@ const TeamSelect = ({
           {/* Options List */}
           <div
             ref={listRef}
-            className="overflow-y-auto"
+            className="overflow-y-auto custom-scrollbar"
             style={{ maxHeight: '256px' }}
             role="listbox"
           >
@@ -230,23 +230,28 @@ const TeamSelect = ({
                     data-option
                     onClick={() => handleSelect(option.name)}
                     onMouseEnter={() => setHighlightedIndex(idx)}
-                    className={`flex items-center gap-2.5 px-3.5 py-2.5 cursor-pointer transition-colors duration-100 text-sm select-none ${
+                    className={`flex items-center gap-2.5 px-3.5 py-2.5 cursor-pointer transition-all duration-100 text-sm select-none border-l-2 ${
                       isHighlighted
-                        ? 'bg-fifa-gold/10 text-white'
-                        : 'hover:bg-white/5 text-slate-300'
-                    } ${isSelected ? 'bg-fifa-gold/5 font-bold text-fifa-gold' : ''}`}
+                        ? 'bg-fifa-gold/10 text-white border-fifa-gold'
+                        : 'hover:bg-white/5 text-slate-300 border-transparent'
+                    } ${isSelected ? 'bg-fifa-gold/5 font-bold text-fifa-gold border-fifa-gold' : ''}`}
                     role="option"
                     aria-selected={isSelected}
                   >
                     {showFlags && (
                       <Flag
                         teamName={option.name}
-                        className="w-6 h-4 object-cover rounded-sm shadow-sm shrink-0"
+                        className="w-6 h-4 object-cover rounded shadow-sm shrink-0 border border-white/5"
                       />
                     )}
                     <span className="truncate flex-1">{option.name}</span>
+                    {option.confederation && (
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 bg-white/5 border border-white/5 px-2 py-0.5 rounded shrink-0">
+                        {option.confederation}
+                      </span>
+                    )}
                     {isSelected && (
-                      <svg className="h-4 w-4 text-fifa-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-4 w-4 text-fifa-gold shrink-0 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                     )}
@@ -270,7 +275,7 @@ const TeamSelect = ({
         onKeyDown={handleKeyDown}
         className={`w-full bg-slate-900/60 border rounded-xl px-4 py-3 text-left flex items-center justify-between gap-2 cursor-pointer transition-all duration-200 focus:outline-none ${
           isOpen
-            ? 'border-fifa-gold ring-1 ring-fifa-gold/20'
+            ? 'border-fifa-gold ring-1 ring-fifa-gold/20 shadow-lg shadow-fifa-gold/5'
             : 'border-white/10 hover:border-white/20 focus:border-fifa-gold'
         }`}
         aria-haspopup="listbox"
@@ -282,12 +287,17 @@ const TeamSelect = ({
               {showFlags && (
                 <Flag
                   teamName={selectedOption.name}
-                  className="w-6 h-4 object-cover rounded-sm shadow-sm shrink-0"
+                  className="w-6 h-4 object-cover rounded shadow-sm shrink-0 border border-white/5"
                 />
               )}
               <span className="text-sm font-semibold text-white truncate">
                 {selectedOption.name}
               </span>
+              {selectedOption.confederation && (
+                <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 bg-white/5 border border-white/5 px-2 py-0.5 rounded shrink-0">
+                  {selectedOption.confederation}
+                </span>
+              )}
             </>
           ) : (
             <span className="text-sm text-slate-500">{placeholder}</span>
@@ -297,7 +307,7 @@ const TeamSelect = ({
         {/* Chevron */}
         <svg
           className={`h-4 w-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
+            isOpen ? 'rotate-180 text-fifa-gold' : ''
           }`}
           fill="none"
           viewBox="0 0 24 24"

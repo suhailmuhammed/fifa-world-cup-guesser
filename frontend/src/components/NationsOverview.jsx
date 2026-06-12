@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, Users, Search, ChevronDown, ChevronUp, Loader, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Globe, Users, Search, AlertTriangle, Loader, RefreshCw } from 'lucide-react';
 import Card from './UI/Card';
 import Flag from './UI/Flag';
-import { TEAMS_LIST } from './JoinForm';
+import { TEAMS_LIST } from '../data/teams';
 
 const NationsOverview = ({ backendUrl }) => {
   const [clubsData, setClubsData] = useState({});
@@ -11,7 +11,7 @@ const NationsOverview = ({ backendUrl }) => {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState('all'); // 'all', 'active', 'inactive'
-  const [expandedNations, setExpandedNations] = useState({});
+  const [selectedNation, setSelectedNation] = useState(null);
 
   const fetchClubsData = async () => {
     setLoading(true);
@@ -34,13 +34,6 @@ const NationsOverview = ({ backendUrl }) => {
     fetchClubsData();
   }, [backendUrl]);
 
-  const toggleNationExpand = (nationName) => {
-    setExpandedNations(prev => ({
-      ...prev,
-      [nationName]: !prev[nationName]
-    }));
-  };
-
   // Build the list of nations with their fans
   const getNationsList = () => {
     return TEAMS_LIST.map(team => {
@@ -57,6 +50,9 @@ const NationsOverview = ({ backendUrl }) => {
   };
 
   const allNations = getNationsList();
+
+  // Calculate total fans in the community
+  const totalFans = Object.values(clubsData).reduce((sum, fans) => sum + (fans?.length || 0), 0);
 
   // Filter nations
   const filteredNations = allNations.filter(nation => {
@@ -82,7 +78,7 @@ const NationsOverview = ({ backendUrl }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="max-w-6xl w-full mx-auto px-4 py-8 space-y-8"
+      className="max-w-6xl w-full mx-auto px-4 py-8 space-y-8 animate-in fade-in duration-300"
     >
       {/* Title Header */}
       <div className="relative glass-card p-8 rounded-3xl overflow-hidden border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -90,7 +86,7 @@ const NationsOverview = ({ backendUrl }) => {
         
         <div className="flex flex-col md:flex-row items-center gap-5 text-center md:text-left">
           <div className="p-4 bg-fifa-azure/10 border border-fifa-azure/20 rounded-2xl text-fifa-azure">
-            <Globe className="h-8 w-8" />
+            <Globe className="h-8 w-8 animate-pulse" />
           </div>
           <div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
@@ -186,74 +182,128 @@ const NationsOverview = ({ backendUrl }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {sortedNations.map((nation) => {
             const hasFans = nation.fans.length > 0;
-            const isExpanded = !!expandedNations[nation.name];
+            const fanPercentage = totalFans > 0 ? Math.round((nation.fans.length / totalFans) * 100) : 0;
 
             return (
               <div
                 key={nation.name}
-                className={`rounded-2xl border transition-all duration-300 h-fit overflow-hidden ${
+                onClick={() => hasFans && setSelectedNation(nation)}
+                className={`rounded-xl border transition-all duration-200 p-3.5 flex items-center justify-between relative group ${
                   hasFans
-                    ? 'bg-slate-900/60 border-fifa-gold/20 hover:border-fifa-gold/45 shadow-lg shadow-fifa-gold/5'
-                    : 'bg-slate-950/20 border-white/5 opacity-60'
+                    ? 'cursor-pointer bg-slate-900/50 border-fifa-gold/20 hover:border-fifa-gold/50 shadow-md shadow-fifa-gold/5 hover:bg-slate-800/40 hover:scale-[1.01]'
+                    : 'bg-slate-950/10 border-white/5 opacity-50'
                 }`}
               >
-                {/* Nation Card Header */}
-                <div
-                  onClick={() => hasFans && toggleNationExpand(nation.name)}
-                  className={`p-4.5 flex justify-between items-center ${
-                    hasFans ? 'cursor-pointer select-none hover:bg-white/5' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="inline-flex items-center select-none">
-                      <Flag teamName={nation.name} className="w-8 h-5.5 object-cover rounded-md shadow-sm mr-1" />
-                    </span>
-                    <div>
-                      <span className="font-extrabold text-sm text-slate-100 block">{nation.name}</span>
-                      <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">World Cup Team</span>
-                    </div>
-                  </div>
+                {/* FIFA style subtle hover glow */}
+                {hasFans && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-fifa-gold/0 to-fifa-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
+                )}
 
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={`text-xs font-black px-2.5 py-1 rounded-lg ${
-                        hasFans
-                          ? 'bg-fifa-gold/15 text-fifa-gold border border-fifa-gold/25'
-                          : 'bg-white/5 text-slate-600'
-                      }`}
-                    >
-                      {nation.fans.length} fan{nation.fans.length !== 1 ? 's' : ''}
-                    </span>
-                    {hasFans && (
-                      <span className="text-slate-400">
-                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </span>
-                    )}
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="inline-flex items-center select-none shrink-0">
+                    <Flag teamName={nation.name} className="w-8 h-6 object-cover rounded shadow-sm border border-white/5" />
+                  </span>
+                  <div className="min-w-0">
+                    <span className="font-bold text-xs text-slate-100 block truncate group-hover:text-fifa-gold transition-colors">{nation.name}</span>
+                    <span className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">{nation.confederation || "World Cup Team"}</span>
                   </div>
                 </div>
 
-                {/* Roster list */}
-                {hasFans && isExpanded && (
-                  <div className="bg-slate-950/70 border-t border-white/5 p-3.5 space-y-2 max-h-48 overflow-y-auto animate-in slide-in-from-top duration-250">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 mb-1.5">
-                      <Users className="h-3 w-3 text-fifa-gold" /> Registered Supporters:
+                <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    className={`text-[10px] font-black px-2 py-1 rounded-lg ${
+                      hasFans
+                        ? 'bg-fifa-gold/15 text-fifa-gold border border-fifa-gold/25'
+                        : 'bg-white/5 text-slate-600'
+                    }`}
+                  >
+                    {nation.fans.length} Fan{nation.fans.length !== 1 ? 's' : ''}
+                  </span>
+                  {hasFans && (
+                    <span className="text-[10px] text-slate-400 font-bold min-w-[24px] text-right">
+                      {fanPercentage}%
                     </span>
-                    {nation.fans.map((fanName, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between text-xs py-2 px-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors"
-                      >
-                        <span className="font-bold text-slate-200">{fanName}</span>
-                        <span className="text-[9px] text-fifa-gold font-extrabold bg-fifa-gold/10 px-2 py-0.5 rounded-md">Supporter</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* Supporter Modal */}
+      <AnimatePresence>
+        {selectedNation && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedNation(null)}
+              className="absolute inset-0 bg-fifa-dark/80 backdrop-blur-md"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', duration: 0.4 }}
+              className="relative w-full max-w-md glass-card rounded-3xl overflow-hidden border border-fifa-gold/30 shadow-2xl flex flex-col max-h-[80vh] z-10 bg-slate-900"
+            >
+              {/* Gold Top Light Bar */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-fifa-gold" />
+
+              <div className="p-6 border-b border-white/10 flex justify-between items-center bg-slate-950/40">
+                <div className="flex items-center gap-3">
+                  <Flag teamName={selectedNation.name} className="w-10 h-7 object-cover rounded-md shadow-md border border-white/10" />
+                  <div>
+                    <h3 className="text-lg font-black text-white flex items-center gap-2">
+                      🏆 {selectedNation.name} Supporters
+                    </h3>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedNation(null)}
+                  className="text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-lg border border-white/5"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto space-y-3 flex-grow custom-scrollbar">
+                {selectedNation.fans.map((fanName, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-3 p-3.5 bg-slate-800/40 border border-white/5 rounded-2xl hover:bg-slate-800/60 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-fifa-blue to-fifa-azure flex items-center justify-center font-bold text-white text-xs">
+                      👤
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-200 text-sm">{fanName}</h4>
+                      <span className="text-[10px] text-fifa-gold/80 font-semibold tracking-wider uppercase">Verified Fan</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-5 border-t border-white/10 bg-slate-950/40 flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-medium">
+                  Total Fans: <span className="font-black text-fifa-gold text-sm">{selectedNation.fans.length}</span>
+                </span>
+                <button
+                  onClick={() => setSelectedNation(null)}
+                  className="text-[10px] font-extrabold text-slate-300 hover:text-white uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

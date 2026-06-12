@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import Card from './UI/Card';
 import Flag from './UI/Flag';
-import { TEAMS_LIST } from './JoinForm';
+import { TEAMS_LIST } from '../data/teams';
 
 const AdminDashboard = ({ backendUrl }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -179,7 +179,7 @@ const AdminDashboard = ({ backendUrl }) => {
   const getCountriesFanData = () => {
     const countryFansMap = {};
     
-    // Initialize all 32 teams with empty fans list
+    // Initialize all teams with empty fans list
     TEAMS_LIST.forEach(team => {
       countryFansMap[team.name.toLowerCase()] = {
         teamName: team.name,
@@ -594,10 +594,10 @@ const AdminDashboard = ({ backendUrl }) => {
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-lg font-black text-white">World Cup Countries Fan Directory</h2>
-                <p className="text-xs text-slate-400">Showing all 32 qualified nations and their pledge rosters.</p>
+                <p className="text-xs text-slate-400">Showing all qualified nations and their pledge rosters.</p>
               </div>
               <span className="text-xs text-slate-400 font-bold bg-white/5 border border-white/10 px-3 py-1 rounded-full">
-                Active Countries: {countriesFanData.filter(c => c.fans.length > 0).length} / 32
+                Active Countries: {countriesFanData.filter(c => c.fans.length > 0).length} / {TEAMS_LIST.length}
               </span>
             </div>
 
