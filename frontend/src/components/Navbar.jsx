@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trophy, Users, Percent, ShieldAlert, Menu, X, Globe, LogOut, Gamepad2 } from 'lucide-react';
 import Flag from './UI/Flag';
+import FootballIcon from './UI/FootballIcon';
 
 const Navbar = ({ activePage, setPage, user, onLogout }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -17,9 +18,9 @@ const Navbar = ({ activePage, setPage, user, onLogout }) => {
         onClick={() => handleNavClick('landing')} 
         className="flex items-center gap-2.5 cursor-pointer select-none group"
       >
-        <Trophy className="h-6 w-6 text-fifa-gold transition-transform duration-300 group-hover:rotate-12" />
+        <FootballIcon className="h-6 w-6 transition-transform duration-500 group-hover:rotate-[360deg]" />
         <span className="font-black text-lg md:text-xl tracking-wider text-gradient-gold">
-          GOAL HUB
+          TRIONDA
         </span>
       </div>
 

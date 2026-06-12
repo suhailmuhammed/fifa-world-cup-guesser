@@ -7,6 +7,7 @@ import TeamSelect from './UI/TeamSelect';
 import PlayerSelect from './UI/PlayerSelect';
 import { TEAMS_LIST } from '../data/teams';
 import { GOLDEN_BOOT_CANDIDATES, GOLDEN_BALL_CANDIDATES } from '../data/players';
+import FootballIcon from './UI/FootballIcon';
 
 const PredictionForm = ({ user, setPage, backendUrl, onPredictionSuccess }) => {
   const [champion, setChampion] = useState('');
@@ -169,8 +170,8 @@ const PredictionForm = ({ user, setPage, backendUrl, onPredictionSuccess }) => {
       className="max-w-3xl w-full mx-auto px-4 py-8"
     >
       <div className="text-center mb-8">
-        <span className="text-xs uppercase font-extrabold tracking-widest text-fifa-gold px-3 py-1 rounded-full bg-fifa-gold/10 border border-fifa-gold/20">
-          Tournament Guesser
+        <span className="text-xs uppercase font-extrabold tracking-widest text-fifa-gold px-3 py-1 rounded-full bg-fifa-gold/10 border border-fifa-gold/20 flex items-center gap-1.5 w-fit mx-auto">
+          <FootballIcon className="h-3.5 w-3.5" /> Trionda Predictor
         </span>
         <h1 className="text-3xl font-black text-white tracking-tight mt-2.5">
           Submit Your World Cup Predictions

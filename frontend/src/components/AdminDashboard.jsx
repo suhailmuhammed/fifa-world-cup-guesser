@@ -3,10 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldAlert, Users, Trophy, Award, RefreshCw, Sparkles, 
   AlertTriangle, Loader, Lock, LogOut, Search, Trash2, 
-  Globe, Calendar, Eye, EyeOff, CheckCircle2, ChevronDown, ChevronUp, X 
+  Globe, Calendar, Eye, EyeOff, CheckCircle2, ChevronDown, ChevronUp, X,
+  BarChart3, FileSpreadsheet, Download, ArrowUpDown, Activity
 } from 'lucide-react';
 import Card from './UI/Card';
 import Flag from './UI/Flag';
+import FootballIcon from './UI/FootballIcon';
 import { TEAMS_LIST } from '../data/teams';
 
 const AdminDashboard = ({ backendUrl }) => {
@@ -17,7 +19,7 @@ const AdminDashboard = ({ backendUrl }) => {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics', 'countries', 'users'
+  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics', 'countries', 'users', 'reports'
 
   // Analytics stats
   const [stats, setStats] = useState(null);
@@ -34,6 +36,13 @@ const AdminDashboard = ({ backendUrl }) => {
   const [expandedCountries, setExpandedCountries] = useState({});
   const [deleteConfirmUser, setDeleteConfirmUser] = useState(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Reports tab state
+  const [reportSearchName, setReportSearchName] = useState('');
+  const [reportSearchCountry, setReportSearchCountry] = useState('');
+  const [reportSortKey, setReportSortKey] = useState('date');
+  const [reportSortDir, setReportSortDir] = useState('desc');
+  const [selectedReportPrediction, setSelectedReportPrediction] = useState(null);
 
   // Check sessionStorage for existing authentication on mount
   useEffect(() => {
@@ -228,6 +237,201 @@ const AdminDashboard = ({ backendUrl }) => {
     }
   };
 
+  // Analytics aggregation helper
+  const getAnalyticsSummary = () => {
+    const predictors = users.filter(u => u.prediction);
+    const totalPredictions = predictors.length;
+
+    const getMostFrequent = (items) => {
+      if (!items || items.length === 0) return { name: 'N/A', count: 0, percentage: 0 };
+      const counts = {};
+      items.forEach(item => {
+        if (item) {
+          const key = String(item).trim();
+          counts[key] = (counts[key] || 0) + 1;
+        }
+      });
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      if (sorted.length === 0) return { name: 'N/A', count: 0, percentage: 0 };
+      const [name, count] = sorted[0];
+      const percentage = Math.round((count / items.length) * 100);
+      return { name, count, percentage };
+    };
+
+    const champions = predictors.map(u => u.prediction.champion);
+    const runnerUps = predictors.map(u => u.prediction.runnerUp);
+    const goldenBoots = predictors.map(u => u.prediction.goldenBoot);
+    const goldenBalls = predictors.map(u => u.prediction.goldenBall);
+    const mostGoals = predictors.map(u => u.prediction.mostGoalsTeam);
+    const disappointments = predictors.map(u => u.prediction.biggestDisappointment);
+    const fanClubs = users.map(u => u.selectedTeam);
+
+    return {
+      totalPredictions,
+      mostChampion: getMostFrequent(champions),
+      mostRunnerUp: getMostFrequent(runnerUps),
+      mostGoldenBoot: getMostFrequent(goldenBoots),
+      mostGoldenBall: getMostFrequent(goldenBalls),
+      mostGoalsTeam: getMostFrequent(mostGoals),
+      mostDisappointment: getMostFrequent(disappointments),
+      mostSupportedClub: getMostFrequent(fanClubs),
+    };
+  };
+
+  // Filtered and sorted predictions list for Reports table
+  const getFilteredPredictions = () => {
+    const predictors = users.filter(u => u.prediction);
+    
+    // Apply filters
+    const filtered = predictors.filter(u => {
+      const matchesName = u.name.toLowerCase().includes(reportSearchName.toLowerCase());
+      const matchesCountry = u.selectedTeam.toLowerCase().includes(reportSearchCountry.toLowerCase());
+      return matchesName && matchesCountry;
+    });
+
+    // Apply sorting
+    return [...filtered].sort((a, b) => {
+      let valA, valB;
+      if (reportSortKey === 'date') {
+        valA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        valB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      } else if (reportSortKey === 'champion') {
+        valA = a.prediction.champion || '';
+        valB = b.prediction.champion || '';
+      }
+
+      if (valA < valB) return reportSortDir === 'asc' ? -1 : 1;
+      if (valA > valB) return reportSortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  // Sort toggle handler
+  const handleReportSort = (key) => {
+    if (reportSortKey === key) {
+      setReportSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setReportSortKey(key);
+      setReportSortDir('desc');
+    }
+  };
+
+  // Export CSV
+  const handleExportCSV = () => {
+    const predictors = users.filter(u => u.prediction);
+    const headers = [
+      "User Name",
+      "Fan Club Country",
+      "Champion",
+      "Runner-up",
+      "Final Score",
+      "Golden Boot",
+      "Golden Ball",
+      "Highest Scoring Team",
+      "Biggest Disappointment",
+      "Submission Date"
+    ];
+
+    const escapeCSV = (str) => {
+      if (str === null || str === undefined) return '';
+      const text = String(str);
+      if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+        return `"${text.replace(/"/g, '""')}"`;
+      }
+      return text;
+    };
+
+    const rows = predictors.map(u => [
+      u.name,
+      u.selectedTeam,
+      u.prediction.champion,
+      u.prediction.runnerUp,
+      `${u.prediction.finalScore.homeGoals} : ${u.prediction.finalScore.awayGoals}`,
+      u.prediction.goldenBoot,
+      u.prediction.goldenBall,
+      u.prediction.mostGoalsTeam,
+      u.prediction.biggestDisappointment,
+      u.createdAt ? new Date(u.createdAt).toLocaleString() : 'N/A'
+    ]);
+
+    const csvContent = [headers, ...rows].map(row => row.map(escapeCSV).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `trionda_predictions_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Export Excel (MS-Excel HTML Table format)
+  const handleExportExcel = () => {
+    const predictors = users.filter(u => u.prediction);
+    let html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <!--[if gte mso 9]>
+        <xml>
+          <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+              <x:ExcelWorksheet>
+                <x:Name>Trionda Predictions</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+          </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+      </head>
+      <body>
+        <table border="1">
+          <tr style="background-color: #0f172a; color: #ffffff; font-weight: bold;">
+            <th>User Name</th>
+            <th>Fan Club Country</th>
+            <th>Champion</th>
+            <th>Runner-up</th>
+            <th>Final Score</th>
+            <th>Golden Boot</th>
+            <th>Golden Ball</th>
+            <th>Highest Scoring Team</th>
+            <th>Biggest Disappointment</th>
+            <th>Submission Date</th>
+          </tr>
+    `;
+
+    predictors.forEach(u => {
+      html += `
+        <tr>
+          <td>${u.name}</td>
+          <td>${u.selectedTeam}</td>
+          <td>${u.prediction.champion}</td>
+          <td>${u.prediction.runnerUp}</td>
+          <td>${u.prediction.finalScore.homeGoals} : ${u.prediction.finalScore.awayGoals}</td>
+          <td>${u.prediction.goldenBoot}</td>
+          <td>${u.prediction.goldenBall}</td>
+          <td>${u.prediction.mostGoalsTeam}</td>
+          <td>${u.prediction.biggestDisappointment}</td>
+          <td>${u.createdAt ? new Date(u.createdAt).toLocaleString() : 'N/A'}</td>
+        </tr>
+      `;
+    });
+
+    html += `</table></body></html>`;
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `trionda_predictions_${new Date().toISOString().slice(0,10)}.xls`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // --- RENDERING LOCK SCREEN ---
   if (!isAuthenticated) {
     return (
@@ -339,8 +543,9 @@ const AdminDashboard = ({ backendUrl }) => {
           <span className="text-[10px] uppercase font-extrabold tracking-widest text-red-400 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 flex items-center gap-1.5 w-fit">
             <ShieldAlert className="h-3.5 w-3.5" /> Administrator Mode
           </span>
-          <h1 className="text-3xl font-black text-white tracking-tight mt-3">
-            Goal Hub Admin Console
+          <h1 className="text-3xl font-black text-white tracking-tight mt-3 flex items-center gap-2.5">
+            <FootballIcon className="h-8 w-8 animate-pulse shrink-0" />
+            <span>Trionda Admin Console</span>
           </h1>
           <p className="text-slate-400 text-xs mt-1 font-semibold">
             Realtime database aggregates, full country fan rosters, and user management.
@@ -402,6 +607,18 @@ const AdminDashboard = ({ backendUrl }) => {
         >
           <Users className="h-4 w-4" />
           <span>Manage Users ({users.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('reports')}
+          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all duration-200 flex items-center gap-2 ${
+            activeTab === 'reports'
+              ? 'border-red-500 text-white'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <BarChart3 className="h-4 w-4" />
+          <span>Prediction Reports</span>
         </button>
       </div>
 
@@ -785,6 +1002,288 @@ const AdminDashboard = ({ backendUrl }) => {
           </motion.div>
         )}
 
+        {/* TAB 4: PREDICTION REPORTS */}
+        {activeTab === 'reports' && (() => {
+          const summary = getAnalyticsSummary();
+          const filteredPredictions = getFilteredPredictions();
+
+          return (
+            <motion.div
+              key="tab-reports"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-8 animate-in fade-in duration-300"
+            >
+              {/* Analytics Section - Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Total Predictions */}
+                <Card className="p-4 bg-gradient-to-br from-slate-900 to-slate-950 border-white/5 flex flex-col justify-between h-28 relative overflow-hidden group hover:border-fifa-gold/30 transition-all duration-300">
+                  <div className="absolute top-0 right-0 -mr-6 -mt-6 w-16 h-16 bg-fifa-blue/5 rounded-full blur-xl pointer-events-none" />
+                  <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">Total Predictions</span>
+                  <span className="text-3xl font-black text-white mt-1.5">{summary.totalPredictions}</span>
+                  <span className="text-[9px] text-slate-400 font-semibold mt-auto flex items-center gap-1"><Activity className="h-3 w-3 text-fifa-blue" /> Cumulative ballot counts</span>
+                </Card>
+
+                {/* Most Supported Fan Club */}
+                <Card className="p-4 bg-gradient-to-br from-slate-900 to-slate-950 border-white/5 flex flex-col justify-between h-28 relative overflow-hidden group hover:border-fifa-gold/30 transition-all duration-300">
+                  <div className="absolute top-0 right-0 -mr-6 -mt-6 w-16 h-16 bg-fifa-gold/5 rounded-full blur-xl pointer-events-none" />
+                  <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">Most Supported Fan Club</span>
+                  <span className="text-sm font-black text-white mt-1.5 flex items-center gap-1.5 truncate">
+                    {summary.mostSupportedClub.name !== 'N/A' && (
+                      <span className="inline-flex shrink-0"><Flag teamName={summary.mostSupportedClub.name} /></span>
+                    )}
+                    <span className="truncate">{summary.mostSupportedClub.name}</span>
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-semibold mt-auto flex items-center gap-1">
+                    <span className="text-fifa-gold font-bold">{summary.mostSupportedClub.count} fans</span> ({summary.mostSupportedClub.percentage}%)
+                  </span>
+                </Card>
+
+                {/* Most Predicted Champion */}
+                <Card className="p-4 bg-gradient-to-br from-slate-900 to-slate-950 border-white/5 flex flex-col justify-between h-28 relative overflow-hidden group hover:border-fifa-gold/30 transition-all duration-300">
+                  <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">Most Predicted Champion</span>
+                  <span className="text-sm font-black text-white mt-1.5 flex items-center gap-1.5 truncate">
+                    {summary.mostChampion.name !== 'N/A' && (
+                      <span className="inline-flex shrink-0"><Flag teamName={summary.mostChampion.name} /></span>
+                    )}
+                    <span className="truncate">{summary.mostChampion.name}</span>
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-semibold mt-auto flex items-center gap-1">
+                    <span className="text-fifa-gold font-bold">{summary.mostChampion.count} votes</span> ({summary.mostChampion.percentage}%)
+                  </span>
+                </Card>
+
+                {/* Most Predicted Runner-up */}
+                <Card className="p-4 bg-gradient-to-br from-slate-900 to-slate-950 border-white/5 flex flex-col justify-between h-28 relative overflow-hidden group hover:border-fifa-gold/30 transition-all duration-300">
+                  <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">Most Predicted Runner-up</span>
+                  <span className="text-sm font-black text-white mt-1.5 flex items-center gap-1.5 truncate">
+                    {summary.mostRunnerUp.name !== 'N/A' && (
+                      <span className="inline-flex shrink-0"><Flag teamName={summary.mostRunnerUp.name} /></span>
+                    )}
+                    <span className="truncate">{summary.mostRunnerUp.name}</span>
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-semibold mt-auto flex items-center gap-1">
+                    <span className="text-fifa-gold font-bold">{summary.mostRunnerUp.count} votes</span> ({summary.mostRunnerUp.percentage}%)
+                  </span>
+                </Card>
+
+                {/* Most Predicted Golden Boot */}
+                <Card className="p-4 bg-gradient-to-br from-slate-900 to-slate-950 border-white/5 flex flex-col justify-between h-28 relative overflow-hidden group hover:border-fifa-gold/30 transition-all duration-300">
+                  <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">Most Predicted Golden Boot</span>
+                  <span className="text-sm font-black text-white mt-1.5 truncate text-slate-200">
+                    👟 {summary.mostGoldenBoot.name}
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-semibold mt-auto flex items-center gap-1">
+                    <span className="text-fifa-gold font-bold">{summary.mostGoldenBoot.count} votes</span> ({summary.mostGoldenBoot.percentage}%)
+                  </span>
+                </Card>
+
+                {/* Most Predicted Golden Ball */}
+                <Card className="p-4 bg-gradient-to-br from-slate-900 to-slate-950 border-white/5 flex flex-col justify-between h-28 relative overflow-hidden group hover:border-fifa-gold/30 transition-all duration-300">
+                  <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">Most Predicted Golden Ball</span>
+                  <span className="text-sm font-black text-white mt-1.5 truncate text-slate-200">
+                    ⭐ {summary.mostGoldenBall.name}
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-semibold mt-auto flex items-center gap-1">
+                    <span className="text-fifa-gold font-bold">{summary.mostGoldenBall.count} votes</span> ({summary.mostGoldenBall.percentage}%)
+                  </span>
+                </Card>
+
+                {/* Most Predicted Highest Scoring Team */}
+                <Card className="p-4 bg-gradient-to-br from-slate-900 to-slate-950 border-white/5 flex flex-col justify-between h-28 relative overflow-hidden group hover:border-fifa-gold/30 transition-all duration-300">
+                  <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">Most Predicted Top Scorer Team</span>
+                  <span className="text-sm font-black text-white mt-1.5 flex items-center gap-1.5 truncate">
+                    {summary.mostGoalsTeam.name !== 'N/A' && (
+                      <span className="inline-flex shrink-0"><Flag teamName={summary.mostGoalsTeam.name} /></span>
+                    )}
+                    <span className="truncate">{summary.mostGoalsTeam.name}</span>
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-semibold mt-auto flex items-center gap-1">
+                    <span className="text-fifa-gold font-bold">{summary.mostGoalsTeam.count} votes</span> ({summary.mostGoalsTeam.percentage}%)
+                  </span>
+                </Card>
+
+                {/* Most Predicted Biggest Disappointment */}
+                <Card className="p-4 bg-gradient-to-br from-slate-900 to-slate-950 border-white/5 flex flex-col justify-between h-28 relative overflow-hidden group hover:border-fifa-gold/30 transition-all duration-300">
+                  <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">Most Predicted Disappointment</span>
+                  <span className="text-sm font-black text-white mt-1.5 flex items-center gap-1.5 truncate">
+                    {summary.mostDisappointment.name !== 'N/A' && (
+                      <span className="inline-flex shrink-0"><Flag teamName={summary.mostDisappointment.name} /></span>
+                    )}
+                    <span className="truncate">{summary.mostDisappointment.name}</span>
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-semibold mt-auto flex items-center gap-1">
+                    <span className="text-fifa-gold font-bold">{summary.mostDisappointment.count} votes</span> ({summary.mostDisappointment.percentage}%)
+                  </span>
+                </Card>
+              </div>
+
+              {/* Toolbar & Filters */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {/* Search Fields */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                  <div className="relative w-full sm:w-60">
+                    <Search className="absolute left-3.5 top-3.5 h-3.5 w-3.5 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="Search by User Name..."
+                      value={reportSearchName}
+                      onChange={(e) => setReportSearchName(e.target.value)}
+                      className="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500 transition-colors"
+                    />
+                  </div>
+
+                  <div className="relative w-full sm:w-60">
+                    <Search className="absolute left-3.5 top-3.5 h-3.5 w-3.5 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="Search by Fan Club Country..."
+                      value={reportSearchCountry}
+                      onChange={(e) => setReportSearchCountry(e.target.value)}
+                      className="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Export Buttons */}
+                <div className="flex items-center gap-3 shrink-0">
+                  <button
+                    onClick={handleExportCSV}
+                    className="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-white hover:bg-slate-805 transition-all duration-200 flex items-center gap-2 text-xs font-bold"
+                  >
+                    <Download className="h-4 w-4 text-fifa-gold" />
+                    <span>Export CSV</span>
+                  </button>
+
+                  <button
+                    onClick={handleExportExcel}
+                    className="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-white hover:bg-slate-805 transition-all duration-200 flex items-center gap-2 text-xs font-bold"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+                    <span>Export Excel</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Table */}
+              {filteredPredictions.length > 0 ? (
+                <div className="overflow-x-auto rounded-2xl border border-white/5 bg-slate-900/25">
+                  <table className="w-full text-left border-collapse min-w-[1200px]">
+                    <thead>
+                      <tr className="border-b border-white/5 bg-slate-950/30 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                        <th className="py-4 px-5">User Name</th>
+                        <th className="py-4 px-5">Fan Club Country</th>
+                        <th 
+                          onClick={() => handleReportSort('champion')}
+                          className="py-4 px-5 cursor-pointer hover:text-white transition-colors"
+                        >
+                          <span className="flex items-center gap-1">
+                            Champion <ArrowUpDown className="h-3 w-3" />
+                          </span>
+                        </th>
+                        <th className="py-4 px-5">Runner-up</th>
+                        <th className="py-4 px-5 text-center">Final Score</th>
+                        <th className="py-4 px-5">Golden Boot</th>
+                        <th className="py-4 px-5">Golden Ball</th>
+                        <th className="py-4 px-5">Highest Scoring Team</th>
+                        <th className="py-4 px-5">Biggest Disappointment</th>
+                        <th 
+                          onClick={() => handleReportSort('date')}
+                          className="py-4 px-5 cursor-pointer hover:text-white transition-colors"
+                        >
+                          <span className="flex items-center gap-1">
+                            Submission Date <ArrowUpDown className="h-3 w-3" />
+                          </span>
+                        </th>
+                        <th className="py-4 px-5 text-right">Details</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-xs">
+                      {filteredPredictions.map((u) => (
+                        <tr key={u._id} className="hover:bg-white/5 transition-colors group">
+                          {/* User name */}
+                          <td className="py-4 px-5 font-bold text-white max-w-[150px] truncate">{u.name}</td>
+                          
+                          {/* Country allegiance */}
+                          <td className="py-4 px-5 font-semibold text-slate-200">
+                            <span className="inline-flex items-center gap-1.5">
+                              <Flag teamName={u.selectedTeam} />
+                              <span className="truncate">{u.selectedTeam}</span>
+                            </span>
+                          </td>
+
+                          {/* Champion */}
+                          <td className="py-4 px-5 text-fifa-gold font-bold">
+                            <span className="inline-flex items-center gap-1.5">
+                              <Flag teamName={u.prediction.champion} />
+                              <span className="truncate">{u.prediction.champion}</span>
+                            </span>
+                          </td>
+
+                          {/* Runner-up */}
+                          <td className="py-4 px-5 text-slate-300 font-semibold">
+                            <span className="inline-flex items-center gap-1.5">
+                              <Flag teamName={u.prediction.runnerUp} />
+                              <span className="truncate">{u.prediction.runnerUp}</span>
+                            </span>
+                          </td>
+
+                          {/* Final Score */}
+                          <td className="py-4 px-5 text-center font-bold font-mono text-slate-200">
+                            {u.prediction.finalScore.homeGoals} : {u.prediction.finalScore.awayGoals}
+                          </td>
+
+                          {/* Golden Boot */}
+                          <td className="py-4 px-5 text-slate-400 font-medium truncate max-w-[140px]">{u.prediction.goldenBoot}</td>
+
+                          {/* Golden Ball */}
+                          <td className="py-4 px-5 text-slate-400 font-medium truncate max-w-[140px]">{u.prediction.goldenBall}</td>
+
+                          {/* Highest Scoring Team */}
+                          <td className="py-4 px-5 text-slate-300 font-semibold">
+                            <span className="inline-flex items-center gap-1.5">
+                              <Flag teamName={u.prediction.mostGoalsTeam} />
+                              <span className="truncate">{u.prediction.mostGoalsTeam}</span>
+                            </span>
+                          </td>
+
+                          {/* Biggest Disappointment */}
+                          <td className="py-4 px-5 text-slate-300 font-semibold">
+                            <span className="inline-flex items-center gap-1.5">
+                              <Flag teamName={u.prediction.biggestDisappointment} />
+                              <span className="truncate">{u.prediction.biggestDisappointment}</span>
+                            </span>
+                          </td>
+
+                          {/* Submission Date */}
+                          <td className="py-4 px-5 text-slate-500 font-medium">{formatDate(u.createdAt)}</td>
+
+                          {/* Action detail */}
+                          <td className="py-4 px-5 text-right">
+                            <button
+                              onClick={() => setSelectedReportPrediction(u)}
+                              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-fifa-gold hover:text-white border border-white/5 transition-all text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 ml-auto"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              <span>View</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-20 bg-slate-900/10 rounded-2xl border border-white/5 space-y-2">
+                  <AlertTriangle className="h-8 w-8 text-slate-600 mx-auto" />
+                  <h3 className="font-bold text-slate-400 text-sm">No Predictions Found</h3>
+                  <p className="text-xs text-slate-500 max-w-xs mx-auto font-medium">We couldn't find any results matching your search filters.</p>
+                </div>
+              )}
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
       {/* --- CUSTOM DELETE CONFIRMATION MODAL --- */}
@@ -859,6 +1358,139 @@ const AdminDashboard = ({ backendUrl }) => {
                     <span>Delete Permanently</span>
                   </>
                 )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* --- DETAIL VIEW MODAL FOR USER PREDICTIONS --- */}
+      {selectedReportPrediction && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="max-w-2xl w-full bg-slate-900 border border-fifa-gold/20 rounded-2xl p-6 shadow-2xl space-y-6 relative overflow-hidden"
+          >
+            {/* Top gold bar */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-fifa-gold" />
+
+            {/* Header */}
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-sm font-black text-slate-300">
+                  {selectedReportPrediction.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">{selectedReportPrediction.name}'s Ballot</h3>
+                  <p className="text-xs text-slate-400 font-semibold flex items-center gap-1.5">
+                    Fan Club: 
+                    <span className="inline-flex items-center"><Flag teamName={selectedReportPrediction.selectedTeam} /></span>
+                    <span className="text-slate-200">{selectedReportPrediction.selectedTeam}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedReportPrediction(null)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Ballot Q&A Body */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-1">
+              
+              {/* Champion */}
+              <div className="p-4 bg-slate-950/40 rounded-xl border border-white/5 space-y-1.5 hover:border-fifa-gold/20 transition-colors">
+                <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 block">🏆 World Cup Champion</span>
+                <span className="text-xs text-slate-400 font-medium block">Who will win the FIFA World Cup?</span>
+                <div className="flex items-center gap-2 pt-1 font-bold text-fifa-gold text-sm">
+                  <Flag teamName={selectedReportPrediction.prediction.champion} />
+                  <span>{selectedReportPrediction.prediction.champion}</span>
+                </div>
+              </div>
+
+              {/* Runner-up */}
+              <div className="p-4 bg-slate-950/40 rounded-xl border border-white/5 space-y-1.5 hover:border-fifa-gold/20 transition-colors">
+                <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 block">🥈 World Cup Runner-up</span>
+                <span className="text-xs text-slate-400 font-medium block">Which team will finish as the runner-up?</span>
+                <div className="flex items-center gap-2 pt-1 font-bold text-slate-200 text-sm">
+                  <Flag teamName={selectedReportPrediction.prediction.runnerUp} />
+                  <span>{selectedReportPrediction.prediction.runnerUp}</span>
+                </div>
+              </div>
+
+              {/* Final Score */}
+              <div className="p-4 bg-slate-950/40 rounded-xl border border-white/5 space-y-1.5 md:col-span-2 hover:border-fifa-gold/20 transition-colors">
+                <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 block">⚽ Final Score Prediction</span>
+                <span className="text-xs text-slate-400 font-medium block">World Cup Final Score</span>
+                <div className="flex items-center gap-4 pt-1 font-bold text-lg text-white font-mono justify-center">
+                  <div className="flex items-center gap-2">
+                    <Flag teamName={selectedReportPrediction.prediction.champion} />
+                    <span>{selectedReportPrediction.prediction.champion}</span>
+                  </div>
+                  <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-fifa-gold">
+                    {selectedReportPrediction.prediction.finalScore.homeGoals} : {selectedReportPrediction.prediction.finalScore.awayGoals}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span>{selectedReportPrediction.prediction.runnerUp}</span>
+                    <Flag teamName={selectedReportPrediction.prediction.runnerUp} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Golden Boot */}
+              <div className="p-4 bg-slate-950/40 rounded-xl border border-white/5 space-y-1.5 hover:border-fifa-gold/20 transition-colors">
+                <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 block">👟 Golden Boot</span>
+                <span className="text-xs text-slate-400 font-medium block">Who will win the Golden Boot?</span>
+                <div className="text-sm font-bold text-slate-200 pt-1">
+                  {selectedReportPrediction.prediction.goldenBoot}
+                </div>
+              </div>
+
+              {/* Golden Ball */}
+              <div className="p-4 bg-slate-950/40 rounded-xl border border-white/5 space-y-1.5 hover:border-fifa-gold/20 transition-colors">
+                <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 block">⭐ Golden Ball</span>
+                <span className="text-xs text-slate-400 font-medium block">Who will win the Golden Ball?</span>
+                <div className="text-sm font-bold text-slate-200 pt-1">
+                  {selectedReportPrediction.prediction.goldenBall}
+                </div>
+              </div>
+
+              {/* Highest Scoring Team */}
+              <div className="p-4 bg-slate-950/40 rounded-xl border border-white/5 space-y-1.5 hover:border-fifa-gold/20 transition-colors">
+                <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 block">🔥 Highest Scoring Team</span>
+                <span className="text-xs text-slate-400 font-medium block">Which team will score the most goals?</span>
+                <div className="flex items-center gap-2 pt-1 font-bold text-slate-200 text-sm">
+                  <Flag teamName={selectedReportPrediction.prediction.mostGoalsTeam} />
+                  <span>{selectedReportPrediction.prediction.mostGoalsTeam}</span>
+                </div>
+              </div>
+
+              {/* Biggest Disappointment */}
+              <div className="p-4 bg-slate-950/40 rounded-xl border border-white/5 space-y-1.5 hover:border-fifa-gold/20 transition-colors">
+                <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 block">🤯 Biggest Disappointment</span>
+                <span className="text-xs text-slate-400 font-medium block">Which team will be the biggest disappointment?</span>
+                <div className="flex items-center gap-2 pt-1 font-bold text-slate-200 text-sm">
+                  <Flag teamName={selectedReportPrediction.prediction.biggestDisappointment} />
+                  <span>{selectedReportPrediction.prediction.biggestDisappointment}</span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer / Meta */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-white/5">
+              <span className="text-[10px] text-slate-500 font-semibold font-mono">
+                Submitted on: {selectedReportPrediction.createdAt ? new Date(selectedReportPrediction.createdAt).toLocaleString() : 'N/A'}
+              </span>
+              <button
+                onClick={() => setSelectedReportPrediction(null)}
+                className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold py-2.5 px-6 rounded-xl text-xs transition-colors border border-white/5"
+              >
+                Close Ballot
               </button>
             </div>
           </motion.div>

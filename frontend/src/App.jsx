@@ -11,7 +11,9 @@ import Games from './components/Games';
 import Button from './components/UI/Button';
 import { Trophy, Percent, ShieldAlert } from 'lucide-react';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+import FootballIcon from './components/UI/FootballIcon';
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://name-fifa-world-cup-guesser-api.onrender.com';
 
 const InstagramIcon = ({ className = "h-4 w-4" }) => (
   <svg 
@@ -88,8 +90,9 @@ const App = () => {
               >
                 <InstagramIcon className="h-3.5 w-3.5 text-pink-500" /> Follow us on Instagram
               </a>
-              <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-tight">
-                <span className="text-gradient-gold">Goal Hub</span>
+              <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-tight flex items-center justify-center gap-3 md:gap-5">
+                <FootballIcon className="h-12 w-12 sm:h-20 sm:w-20 md:h-24 md:w-24 shrink-0 animate-pulse" />
+                <span className="text-gradient-gold">Trionda</span>
               </h1>
               <p className="text-fifa-gold text-lg sm:text-2xl max-w-2xl mx-auto font-black uppercase tracking-widest mt-2">
                 Predict. Play. Celebrate
@@ -154,8 +157,9 @@ const App = () => {
       </main>
 
       <footer className="w-full border-t border-white/5 bg-fifa-dark/80 backdrop-blur-md py-6 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
-        <div>
-          Developed by <a href="https://github.com/suhailmuhammed" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors font-bold text-slate-400">Suhail Muhammed</a>
+        <div className="flex items-center gap-2 font-medium">
+          <FootballIcon className="h-4 w-4 shrink-0" />
+          <span>© 2026 Trionda | Developed by <a href="https://github.com/suhailmuhammed" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors font-bold text-slate-400">Suhail Muhammed</a></span>
         </div>
         <div className="flex items-center gap-6">
           <a 

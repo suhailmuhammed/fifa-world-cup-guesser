@@ -16,7 +16,7 @@ app.use('/api', apiRoutes);
 
 // Welcome route
 app.get('/', (req, res) => {
-  res.send('Goal Hub API is running...');
+  res.send('Trionda API is running...');
 });
 
 // Start server
