@@ -291,7 +291,9 @@ const PlayerSelect = ({
                         ) : (
                           option.id === 'other' ? null : <span className="text-xxs shrink-0">⚽</span>
                         )}
-                        <span className="text-sm font-semibold text-white truncate flex-1">{option.name}</span>
+                        <span className="text-sm font-semibold text-white truncate flex-1">
+                          {option.name}{option.id !== 'other' && ` — ${option.country}`}
+                        </span>
                       </div>
                       <div className="text-xxs text-slate-400 flex items-center gap-1.5 mt-0.5">
                         <span>{option.country}</span>
@@ -348,7 +350,7 @@ const PlayerSelect = ({
                     selectedOption.id === 'other' ? null : <span className="text-xxs shrink-0">⚽</span>
                   )}
                   <span className="text-sm font-semibold text-white truncate">
-                    {selectedOption.name}
+                    {selectedOption.name}{selectedOption.id !== 'other' && ` — ${selectedOption.country}`}
                   </span>
                 </div>
                 <span className="text-xxs text-slate-400">
