@@ -5,14 +5,95 @@ const db = require('../db');
 // Create user / join fan club
 router.post('/users', async (req, res) => {
   try {
-    const { name, selectedTeam } = req.body;
+    const { name, selectedTeam, pin } = req.body;
     if (!name || !selectedTeam) {
       return res.status(400).json({ error: 'Name and Favorite Team are required' });
     }
-    const user = await db.createUser({ name, selectedTeam });
+    const user = await db.createUser({ name, selectedTeam, pin });
     res.status(201).json(user);
   } catch (err) {
     console.error('Error creating user:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Check if returning user exists and PIN configuration
+router.post('/users/check', async (req, res) => {
+  try {
+    const { name, selectedTeam } = req.body;
+    if (!name || !selectedTeam) {
+      return res.status(400).json({ error: 'Name and Selected Country are required' });
+    }
+
+    const user = await db.getUserByNameAndTeam(name, selectedTeam);
+    if (user) {
+      return res.json({
+        exists: true,
+        pinExists: !!user.pin,
+        userId: user._id.toString(),
+        name: user.name,
+        selectedTeam: user.selectedTeam
+      });
+    }
+
+    return res.json({ exists: false });
+  } catch (err) {
+    console.error('Error in /users/check:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Setup 4-digit PIN for returning user
+router.post('/users/setup-pin', async (req, res) => {
+  try {
+    const { userId, pin } = req.body;
+    if (!userId || !pin) {
+      return res.status(400).json({ error: 'userId and PIN are required' });
+    }
+
+    if (typeof pin !== 'string' || !/^\d{4}$/.test(pin)) {
+      return res.status(400).json({ error: 'PIN must be exactly 4 digits' });
+    }
+
+    const user = await db.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.pin) {
+      return res.status(400).json({ error: 'PIN is already set for this user' });
+    }
+
+    const updatedUser = await db.updateUserPin(userId, pin);
+    const userResponse = { _id: updatedUser._id.toString(), name: updatedUser.name, selectedTeam: updatedUser.selectedTeam };
+    res.json({ success: true, user: userResponse });
+  } catch (err) {
+    console.error('Error in /users/setup-pin:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Verify 4-digit PIN for returning user
+router.post('/users/verify-pin', async (req, res) => {
+  try {
+    const { userId, pin } = req.body;
+    if (!userId || !pin) {
+      return res.status(400).json({ error: 'userId and PIN are required' });
+    }
+
+    const user = await db.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.pin !== pin) {
+      return res.status(401).json({ error: 'Incorrect PIN' });
+    }
+
+    const userResponse = { _id: user._id.toString(), name: user.name, selectedTeam: user.selectedTeam };
+    res.json({ success: true, user: userResponse });
+  } catch (err) {
+    console.error('Error in /users/verify-pin:', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -282,6 +363,7 @@ router.get('/admin/users', checkAdminAuth, async (req, res) => {
         name: user.name,
         selectedTeam: user.selectedTeam,
         createdAt: user.createdAt,
+        hasPin: !!user.pin,
         prediction
       };
     });
@@ -301,6 +383,59 @@ router.delete('/admin/users/:userId', checkAdminAuth, async (req, res) => {
     res.json({ success: true, message: 'User and predictions deleted successfully' });
   } catch (err) {
     console.error('Error deleting user:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Get admin activity logs (protected)
+router.get('/admin/logs', checkAdminAuth, async (req, res) => {
+  try {
+    const logs = await db.getAdminLogs();
+    res.json(logs);
+  } catch (err) {
+    console.error('Error fetching admin logs:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Reveal PIN (protected)
+router.post('/admin/users/:userId/reveal-pin', checkAdminAuth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await db.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const pin = user.pin || 'No PIN set';
+    
+    // Log the reveal action
+    await db.createAdminLog('REVEAL_PIN', `Revealed PIN for user "${user.name}" (${user.selectedTeam})`);
+    
+    res.json({ pin });
+  } catch (err) {
+    console.error('Error revealing user PIN:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Reset PIN (protected)
+router.post('/admin/users/:userId/reset-pin', checkAdminAuth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await db.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await db.updateUserPin(userId, null);
+    
+    // Log the reset action
+    await db.createAdminLog('RESET_PIN', `Reset PIN for user "${user.name}" (${user.selectedTeam})`);
+    
+    res.json({ success: true, message: 'PIN reset successfully' });
+  } catch (err) {
+    console.error('Error resetting user PIN:', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

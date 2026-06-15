@@ -7,7 +7,8 @@ const FALLBACK_FILE = path.join(__dirname, 'db_fallback.json');
 let isFallback = true;
 let localDb = {
   users: [],
-  predictions: []
+  predictions: [],
+  adminLogs: []
 };
 
 // Load initial local DB if it exists
@@ -16,6 +17,9 @@ function loadLocalDb() {
     if (fs.existsSync(FALLBACK_FILE)) {
       const data = fs.readFileSync(FALLBACK_FILE, 'utf8');
       localDb = JSON.parse(data);
+      if (!localDb.users) localDb.users = [];
+      if (!localDb.predictions) localDb.predictions = [];
+      if (!localDb.adminLogs) localDb.adminLogs = [];
     } else {
       saveLocalDb();
     }
@@ -53,12 +57,14 @@ async function connectDB() {
 
 // User methods
 const User = require('./models/User');
+const AdminLog = require('./models/AdminLog');
 
 async function createUser(userData) {
   if (!isFallback) {
     const user = new User({
       name: userData.name,
-      selectedTeam: userData.selectedTeam
+      selectedTeam: userData.selectedTeam,
+      pin: userData.pin || null
     });
     return await user.save();
   } else {
@@ -66,6 +72,7 @@ async function createUser(userData) {
       _id: 'u_' + Math.random().toString(36).substr(2, 9),
       name: userData.name,
       selectedTeam: userData.selectedTeam,
+      pin: userData.pin || null,
       createdAt: new Date().toISOString()
     };
     localDb.users.push(newUser);
@@ -207,6 +214,62 @@ async function deleteUser(id) {
   return true;
 }
 
+async function getUserByNameAndTeam(name, team) {
+  if (!isFallback) {
+    return await User.findOne({
+      name: { $regex: new RegExp('^' + name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '$', 'i') },
+      selectedTeam: { $regex: new RegExp('^' + team.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '$', 'i') }
+    });
+  } else {
+    return localDb.users.find(u => u.name.toLowerCase() === name.toLowerCase() && u.selectedTeam.toLowerCase() === team.toLowerCase()) || null;
+  }
+}
+
+async function updateUserPin(userId, pin) {
+  if (!isFallback) {
+    return await User.findByIdAndUpdate(userId, { pin }, { new: true });
+  } else {
+    const user = localDb.users.find(u => u._id === userId);
+    if (user) {
+      user.pin = pin;
+      saveLocalDb();
+      return user;
+    }
+    return null;
+  }
+}
+
+async function createAdminLog(action, details) {
+  if (!isFallback) {
+    const log = new AdminLog({ action, details });
+    return await log.save();
+  } else {
+    const newLog = {
+      _id: 'l_' + Math.random().toString(36).substr(2, 9),
+      action,
+      details,
+      timestamp: new Date().toISOString()
+    };
+    if (!localDb.adminLogs) {
+      localDb.adminLogs = [];
+    }
+    localDb.adminLogs.push(newLog);
+    saveLocalDb();
+    return newLog;
+  }
+}
+
+async function getAdminLogs() {
+  if (!isFallback) {
+    return await AdminLog.find({}).sort({ timestamp: -1 });
+  } else {
+    if (!localDb.adminLogs) {
+      localDb.adminLogs = [];
+    }
+    return [...localDb.adminLogs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  }
+}
+
 module.exports = {
   connectDB,
   createUser,
@@ -219,6 +282,10 @@ module.exports = {
   getPredictionByUserId,
   getPredictorsByOption,
   deleteUser,
+  getUserByNameAndTeam,
+  updateUserPin,
+  createAdminLog,
+  getAdminLogs,
   isFallback: () => isFallback
 };
 

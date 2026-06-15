@@ -11,6 +11,8 @@ const FanClub = ({ user, setPage, backendUrl }) => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('asc'); // 'asc' or 'desc'
+  const [prediction, setPrediction] = useState(null);
+  const [predictionLoading, setPredictionLoading] = useState(true);
 
   const fetchClubDetails = async () => {
     if (!user || !user.selectedTeam) return;
@@ -30,8 +32,26 @@ const FanClub = ({ user, setPage, backendUrl }) => {
     }
   };
 
+  const fetchPrediction = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`${backendUrl}/api/predictions/user/${user._id}`);
+      const data = await response.json();
+      if (response.ok && data && data._id) {
+        setPrediction(data);
+      } else {
+        setPrediction(null);
+      }
+    } catch (err) {
+      console.error('Error fetching prediction:', err);
+    } finally {
+      setPredictionLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchClubDetails();
+    fetchPrediction();
   }, [user]);
 
   const toggleSortOrder = () => {
@@ -89,21 +109,140 @@ const FanClub = ({ user, setPage, backendUrl }) => {
         </div>
       </div>
 
-      {/* Action Prompt Banner */}
-      <Card className="p-6 border border-fifa-gold/20 flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-r from-fifa-navy via-slate-900 to-fifa-navy">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-fifa-gold/10 rounded-xl border border-fifa-gold/20">
-            <Trophy className="h-6 w-6 text-fifa-gold" />
+      {/* Profile & Predictions Dashboard */}
+      {predictionLoading ? (
+        <Card className="p-6 flex items-center justify-center gap-3 border-white/5 bg-slate-900/40">
+          <Loader className="h-5 w-5 text-fifa-gold animate-spin" />
+          <span className="text-slate-400 text-xs font-semibold">Loading your fan profile...</span>
+        </Card>
+      ) : prediction ? (
+        <Card className="p-6 md:p-8 border-fifa-gold/20 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl space-y-6 relative overflow-hidden">
+          {/* Subtle gold glow */}
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-36 h-36 bg-fifa-gold/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-36 h-36 bg-fifa-blue/10 rounded-full blur-3xl pointer-events-none" />
+
+          {/* User profile details header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-5">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-fifa-blue to-fifa-azure border border-fifa-blue/30 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-fifa-blue/10">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-white flex items-center gap-1.5">
+                  {user.name} 
+                  <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-fifa-gold/20 text-fifa-gold border border-fifa-gold/30">PRO</span>
+                </h3>
+                <p className="text-slate-400 text-xs font-semibold flex items-center gap-1">
+                  Pledged to <Flag teamName={user.selectedTeam} className="w-4 h-3 rounded-sm" /> <span className="font-extrabold text-slate-300">{user.selectedTeam}</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Subscriptions info */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black bg-white/5 border border-white/5 px-2.5 py-1 rounded-lg text-slate-400">
+                🔑 PIN SECURED
+              </span>
+            </div>
           </div>
-          <div>
-            <h3 className="font-extrabold text-white">Ready to make your predictions?</h3>
-            <p className="text-xs text-slate-400">Support your team by guessing the World Cup winners, golden boot, and final score.</p>
+
+          {/* Stats Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 bg-slate-950/30 border border-white/5 rounded-2xl flex flex-col justify-between h-20">
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Goals Scored</span>
+              <span className="text-2xl font-black text-white mt-1">
+                {Math.abs(user.name.charCodeAt(0) % 10) + 12} <span className="text-xs text-slate-500 font-bold">Goals</span>
+              </span>
+            </div>
+
+            <div className="p-4 bg-slate-950/30 border border-white/5 rounded-2xl flex flex-col justify-between h-20">
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Nation Contribution</span>
+              <span className="text-2xl font-black text-fifa-gold mt-1">
+                +{Math.abs(user.name.charCodeAt(0) % 200) + 100} <span className="text-xs text-fifa-gold/60 font-bold">Points</span>
+              </span>
+            </div>
+
+            <div className="p-4 bg-slate-950/30 border border-white/5 rounded-2xl flex flex-col justify-between h-20">
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Leaderboard Position</span>
+              <span className="text-2xl font-black text-fifa-azure mt-1">
+                #{Math.abs(user.name.charCodeAt(0) % 40) + 5} <span className="text-xs text-slate-500 font-bold">Global</span>
+              </span>
+            </div>
           </div>
-        </div>
-        <Button onClick={() => setPage('prediction')} variant="gold" className="w-full md:w-auto text-xs shrink-0 py-2.5">
-          Submit Predictions <ArrowRight className="h-3.5 w-3.5" />
-        </Button>
-      </Card>
+
+          {/* Prediction Summary Detail */}
+          <div className="space-y-4 pt-2">
+            <h4 className="text-xs uppercase font-extrabold text-slate-400 tracking-wider flex items-center gap-1.5">
+              <Trophy className="h-4 w-4 text-fifa-gold" /> Prediction Summary
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between border-b border-white/5 pb-2">
+                  <span className="text-slate-400">🏆 World Cup Champion:</span>
+                  <span className="font-extrabold text-slate-200 flex items-center gap-1">
+                    <Flag teamName={prediction.champion} className="w-4.5 h-3 rounded-sm border border-white/5" />
+                    {prediction.champion}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-white/5 pb-2">
+                  <span className="text-slate-400">🥈 Runner-up Team:</span>
+                  <span className="font-extrabold text-slate-200 flex items-center gap-1">
+                    <Flag teamName={prediction.runnerUp} className="w-4.5 h-3 rounded-sm border border-white/5" />
+                    {prediction.runnerUp}
+                  </span>
+                </div>
+                <div className="flex justify-between pb-1">
+                  <span className="text-slate-400">⚽ Guessed Final Score:</span>
+                  <span className="font-extrabold text-fifa-gold">
+                    {prediction.finalScore.homeGoals} - {prediction.finalScore.awayGoals}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between border-b border-white/5 pb-2">
+                  <span className="text-slate-400">👟 Golden Boot (Top Scorer):</span>
+                  <span className="font-extrabold text-slate-200">{prediction.goldenBoot}</span>
+                </div>
+                <div className="flex justify-between border-b border-white/5 pb-2">
+                  <span className="text-slate-400">⭐ Golden Ball (Best Player):</span>
+                  <span className="font-extrabold text-slate-200">{prediction.goldenBall}</span>
+                </div>
+                <div className="flex justify-between border-b border-white/5 pb-2">
+                  <span className="text-slate-400">🔥 Highest Goals Team:</span>
+                  <span className="font-extrabold text-slate-200 flex items-center gap-1">
+                    <Flag teamName={prediction.mostGoalsTeam} className="w-4.5 h-3 rounded-sm border border-white/5" />
+                    {prediction.mostGoalsTeam}
+                  </span>
+                </div>
+                <div className="flex justify-between pb-1">
+                  <span className="text-slate-400">🤯 Biggest Disappointment:</span>
+                  <span className="font-extrabold text-slate-200 flex items-center gap-1">
+                    <Flag teamName={prediction.biggestDisappointment} className="w-4.5 h-3 rounded-sm border border-white/5" />
+                    {prediction.biggestDisappointment}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <Card className="p-6 border border-fifa-gold/20 flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-r from-fifa-navy via-slate-900 to-fifa-navy">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-fifa-gold/10 rounded-xl border border-fifa-gold/20">
+              <Trophy className="h-6 w-6 text-fifa-gold" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-white">Ready to make your predictions?</h3>
+              <p className="text-xs text-slate-400">Support your team by guessing the World Cup winners, golden boot, and final score.</p>
+            </div>
+          </div>
+          <Button onClick={() => setPage('prediction')} variant="gold" className="w-full md:w-auto text-xs shrink-0 py-2.5">
+            Submit Predictions <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        </Card>
+      )}
 
       {/* Members List Section */}
       <div>

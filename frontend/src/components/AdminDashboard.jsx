@@ -19,7 +19,7 @@ const AdminDashboard = ({ backendUrl }) => {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics', 'countries', 'users', 'reports'
+  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics', 'countries', 'users', 'reports', 'logs'
 
   // Analytics stats
   const [stats, setStats] = useState(null);
@@ -31,6 +31,14 @@ const AdminDashboard = ({ backendUrl }) => {
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Admin Logs
+  const [adminLogs, setAdminLogs] = useState([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsError, setLogsError] = useState('');
+
+  // PIN reveal state
+  const [revealedPins, setRevealedPins] = useState({});
 
   // UI States
   const [expandedCountries, setExpandedCountries] = useState({});
@@ -60,6 +68,7 @@ const AdminDashboard = ({ backendUrl }) => {
     if (isAuthenticated && adminPassword) {
       fetchAdminStats(adminPassword);
       fetchAdminUsers(adminPassword);
+      fetchAdminLogs(adminPassword);
     }
   }, [isAuthenticated, adminPassword, backendUrl]);
 
@@ -106,6 +115,73 @@ const AdminDashboard = ({ backendUrl }) => {
       setUsersError(err.message);
     } finally {
       setUsersLoading(false);
+    }
+  };
+
+  const fetchAdminLogs = async (pwd = adminPassword) => {
+    setLogsLoading(true);
+    setLogsError('');
+    try {
+      const response = await fetch(`${backendUrl}/api/admin/logs`, {
+        headers: { 'x-admin-password': pwd }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch logs.');
+      }
+      setAdminLogs(data);
+    } catch (err) {
+      setLogsError(err.message);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  const handleRevealPin = async (userId) => {
+    try {
+      const response = await fetch(`${backendUrl}/api/admin/users/${userId}/reveal-pin`, {
+        method: 'POST',
+        headers: { 'x-admin-password': adminPassword }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reveal PIN.');
+      }
+      setRevealedPins(prev => ({
+        ...prev,
+        [userId]: data.pin
+      }));
+      fetchAdminLogs(adminPassword);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleResetPin = async (user) => {
+    if (!confirm(`Are you sure you want to reset the PIN for user "${user.name}"?`)) {
+      return;
+    }
+    try {
+      const response = await fetch(`${backendUrl}/api/admin/users/${user._id}/reset-pin`, {
+        method: 'POST',
+        headers: { 'x-admin-password': adminPassword }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reset PIN.');
+      }
+      
+      setUsers(prev => prev.map(u => u._id === user._id ? { ...u, hasPin: false } : u));
+      setRevealedPins(prev => {
+        const copy = { ...prev };
+        delete copy[user._id];
+        return copy;
+      });
+      
+      alert('PIN reset successfully!');
+      fetchAdminLogs(adminPassword);
+    } catch (err) {
+      alert(err.message);
     }
   };
 
@@ -182,6 +258,7 @@ const AdminDashboard = ({ backendUrl }) => {
   const reloadAllData = () => {
     fetchAdminStats(adminPassword);
     fetchAdminUsers(adminPassword);
+    fetchAdminLogs(adminPassword);
   };
 
   // Setup Countries Fan Directory
@@ -620,6 +697,18 @@ const AdminDashboard = ({ backendUrl }) => {
           <BarChart3 className="h-4 w-4" />
           <span>Prediction Reports</span>
         </button>
+
+        <button
+          onClick={() => setActiveTab('logs')}
+          className={`px-5 py-3 text-sm font-bold border-b-2 transition-all duration-200 flex items-center gap-2 ${
+            activeTab === 'logs'
+              ? 'border-red-500 text-white'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Activity className="h-4 w-4" />
+          <span>Admin Logs ({adminLogs.length})</span>
+        </button>
       </div>
 
       {/* ERROR MESSAGE (Stats or Users fetch failed) */}
@@ -923,6 +1012,7 @@ const AdminDashboard = ({ backendUrl }) => {
                       <th className="py-4 px-6">Fan Profile</th>
                       <th className="py-4 px-6">Allegiance</th>
                       <th className="py-4 px-6">Joined Date</th>
+                      <th className="py-4 px-6">Security PIN</th>
                       <th className="py-4 px-6">Ballot Status</th>
                       <th className="py-4 px-6 text-right">Actions</th>
                     </tr>
@@ -957,6 +1047,53 @@ const AdminDashboard = ({ backendUrl }) => {
                             <Calendar className="h-3.5 w-3.5 text-slate-500" />
                             <span>{formatDate(user.createdAt)}</span>
                           </div>
+                        </td>
+
+                        {/* Security PIN */}
+                        <td className="py-4.5 px-6">
+                          {user.hasPin ? (
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-sm tracking-wider font-bold">
+                                {revealedPins[user._id] ? (
+                                  <span className="text-fifa-gold bg-fifa-gold/10 border border-fifa-gold/20 px-2 py-0.5 rounded font-mono font-bold text-xs">
+                                    {revealedPins[user._id]}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-500 font-bold">••••</span>
+                                )}
+                              </span>
+                              {!revealedPins[user._id] ? (
+                                <button
+                                  onClick={() => handleRevealPin(user._id)}
+                                  className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                                  title="Reveal PIN"
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setRevealedPins(prev => {
+                                    const copy = { ...prev };
+                                    delete copy[user._id];
+                                    return copy;
+                                  })}
+                                  className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                                  title="Hide PIN"
+                                >
+                                  <EyeOff className="h-3 w-3" />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleResetPin(user)}
+                                className="px-2 py-0.5 text-[9px] font-bold text-red-400 hover:text-white bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 rounded transition-colors ml-1"
+                                title="Reset PIN"
+                              >
+                                Reset
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-slate-500 font-semibold italic text-[11px]">No PIN set</span>
+                          )}
                         </td>
 
                         {/* Ballot status */}
@@ -1284,6 +1421,72 @@ const AdminDashboard = ({ backendUrl }) => {
             </motion.div>
           );
         })()}
+
+        {activeTab === 'logs' && (
+          <motion.div
+            key="tab-logs"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-black text-white">Administrator Activity Logs</h2>
+                <p className="text-xs text-slate-400">Audit trail of secure administrative actions (e.g. Reveal PIN, Reset PIN).</p>
+              </div>
+              <span className="text-xs text-slate-400 font-bold bg-white/5 border border-white/10 px-3 py-1 rounded-full">
+                Total Logs: {adminLogs.length}
+              </span>
+            </div>
+
+            {logsLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3 bg-slate-900/10 rounded-2xl border border-white/5">
+                <Loader className="h-6 w-6 text-red-500 animate-spin" />
+                <span className="text-slate-400 text-xs">Loading activity logs...</span>
+              </div>
+            ) : adminLogs.length > 0 ? (
+              <div className="overflow-x-auto rounded-2xl border border-white/5 bg-slate-900/25">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/5 bg-slate-950/30 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                      <th className="py-4 px-6">Timestamp</th>
+                      <th className="py-4 px-6">Action</th>
+                      <th className="py-4 px-6">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-xs font-mono">
+                    {adminLogs.map((log) => (
+                      <tr key={log._id} className="hover:bg-white/5 transition-colors">
+                        <td className="py-3.5 px-6 text-slate-400 font-semibold whitespace-nowrap">
+                          {formatDate(log.timestamp)}
+                        </td>
+                        <td className="py-3.5 px-6">
+                          <span className={`px-2 py-0.5 rounded font-black text-[9px] ${
+                            log.action === 'REVEAL_PIN' 
+                              ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400' 
+                              : 'bg-red-500/10 border border-red-500/20 text-red-400'
+                          }`}>
+                            {log.action}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-6 text-slate-200">
+                          {log.details}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-20 bg-slate-900/10 rounded-2xl border border-white/5 space-y-2">
+                <Activity className="h-8 w-8 text-slate-600 mx-auto animate-pulse" />
+                <h3 className="font-bold text-slate-400 text-sm">No Audit Logs</h3>
+                <p className="text-xs text-slate-500 max-w-xs mx-auto">Administrative actions will appear here once executed.</p>
+              </div>
+            )}
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* --- CUSTOM DELETE CONFIRMATION MODAL --- */}
