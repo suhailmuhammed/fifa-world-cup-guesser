@@ -6,6 +6,7 @@ import FanClub from './components/FanClub';
 import PredictionForm from './components/PredictionForm';
 import CommunityStats from './components/CommunityStats';
 import AdminDashboard from './components/AdminDashboard';
+import OfficialResults from './components/OfficialResults';
 import NationsOverview from './components/NationsOverview';
 import Games from './components/Games';
 import Button from './components/UI/Button';
@@ -111,6 +112,8 @@ const App = () => {
         );
       case 'stats':
         return <CommunityStats key="stats" backendUrl={BACKEND_URL} />;
+      case 'official-results':
+        return <OfficialResults key="official-results" backendUrl={BACKEND_URL} />;
       case 'nations':
         return <NationsOverview key="nations" backendUrl={BACKEND_URL} />;
       case 'admin':
@@ -144,6 +147,9 @@ const App = () => {
           </button>
           <button onClick={() => setPage('stats')} className="hover:text-slate-300 transition-colors">
             Stats
+          </button>
+          <button onClick={() => setPage('official-results')} className="hover:text-fifa-gold font-semibold transition-colors">
+            🏆 Official Results
           </button>
           <button onClick={() => setPage('games')} className="hover:text-slate-300 transition-colors">
             Games

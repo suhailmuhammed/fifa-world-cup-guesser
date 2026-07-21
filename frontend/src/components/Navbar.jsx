@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Users, Percent, ShieldAlert, Menu, X, Globe, LogOut, Gamepad2 } from 'lucide-react';
+import { Trophy, Users, Percent, ShieldAlert, Menu, X, Globe, LogOut, Gamepad2, Award } from 'lucide-react';
 import Flag from './UI/Flag';
 import FootballIcon from './UI/FootballIcon';
 
@@ -65,6 +65,15 @@ const Navbar = ({ activePage, setPage, user, onLogout }) => {
         >
           <Percent className="h-4 w-4" />
           Community Stats
+        </button>
+        <button
+          onClick={() => handleNavClick('official-results')}
+          className={`flex items-center gap-1.5 text-sm font-semibold transition-colors duration-200 ${
+            activePage === 'official-results' ? 'text-fifa-gold' : 'text-slate-300 hover:text-white'
+          }`}
+        >
+          <Award className="h-4 w-4 text-fifa-gold" />
+          🏆 Official Results
         </button>
         <button
           onClick={() => handleNavClick('games')}
@@ -190,6 +199,15 @@ const Navbar = ({ activePage, setPage, user, onLogout }) => {
           >
             <Percent className="h-5 w-5" />
             Community Stats
+          </button>
+          <button
+            onClick={() => handleNavClick('official-results')}
+            className={`flex items-center gap-3 py-2 text-left font-semibold ${
+              activePage === 'official-results' ? 'text-fifa-gold' : 'text-slate-300'
+            }`}
+          >
+            <Award className="h-5 w-5 text-fifa-gold" />
+            🏆 Official Results
           </button>
           <button
             onClick={() => handleNavClick('games')}
